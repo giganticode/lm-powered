@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" 
+        content="img-src vscode-resource: data: https:; script-src vscode-resource:; style-src 'unsafe-inline' vscode-resource:;" />
+    <title>Search</title>
+
+    <style>
+        body {
+            width: 100%;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        #search {
+            padding: 15px 5px;
+        }
+
+        #scrollcontainer {
+            height: calc(100vh - 95px);
+            width: 100%;
+            overflow: auto;
+        }
+
+        #container {
+            white-space: nowrap;
+            float: left;
+        }
+
+        div [data-index]:hover {
+            cursor: pointer;
+        }
+
+        svg [data-index][data-line]:hover {
+            stroke: rgb(4, 155, 4);
+        }
+
+        div.no-matches {
+            display: none !important;
+        }
+
+        div.file {
+            overflow: hidden;
+        }
+
+        div.file img {
+            height: 100%;
+            width: auto;
+            max-height: unset;
+            max-width: unset;
+        }
+
+        div.match {
+            background: #0f0
+        }
+
+        div.match:hover {
+            background: #088608
+        }
+
+        .noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #loading {
+            display: none;
+        }
+
+        #input-search {
+            height: 40px;
+            vertical-align: middle;
+            display: inline-block;
+            max-width: 100%;
+            width: 100%;
+            border: 0 none;
+            padding: 0 10px;
+            background: #fff;
+            color: #666;
+            border: 1px solid #e5e5e5;
+            transition: .2s ease-in-out;
+            transition-property: color, background-color, border;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="search">
+        <input placeholder="Search..." type="search" id="input-search" autofocus />
+        <label>RegEx <input type="checkbox" id="regex" /></label>
+        <progress id="progress" value="0" max="100"></progress>
+        <span id="loading"> loading results...</span>
+    </div>
+
+    <div id="scrollcontainer" class="noselect">
+        <div id="container"></div>
+    </div>
+
+    <pre id="node" style="font-size: 4px; color: white; max-width: 220px; overflow-x: hidden;"></pre>
+    <script src="./jquery.min.js"></script>
+    <script src="./dom-to-image.min.js"></script>
+    <script src="./search.js"></script>
+
+</body>
+
+</html>

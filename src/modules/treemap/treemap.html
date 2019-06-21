@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'unsafe-inline' vscode-resource: https:; script-src vscode-resource: https: 'nonce-NONCE'; style-src 'unsafe-inline' vscode-resource: https:">
+    <title>Code Quality</title>  
+    <link href="./nouislider.css" rel="stylesheet" type="text/css">
+
+    <style nonce="NONCE">
+        #options {
+            padding: 5px;
+            height: 60px;
+            display: flex;
+        }
+        #type {
+            width: 130px;
+            padding: 11px 11px 11px 0;
+        }
+        #slider {
+            width: calc(100% - 140px);
+            margin-top: 10px;
+        }
+        .select {
+            padding-right: 20px;
+            height: 40px;
+            vertical-align: middle;
+            display: inline-block;
+            max-width: 100%;
+            width: 100%;
+            padding: 0 10px;
+            color: #666;
+            border: 1px solid #e5e5e5;
+            transition: .2s ease-in-out;
+            transition-property: color,background-color,border;
+            box-sizing: border-box;
+            margin: 0;
+            border-radius: 0;
+            font: inherit;
+            text-transform: none;
+            font-size: 16px;
+        }
+        CSSCOLORS
+        .noUi-horizontal .noUi-handle {
+            width: 24px;
+            margin-right: 6px;
+        }
+        .noUi-handle:before {
+            left: 9px;
+        }
+        .noUi-handle:after {
+            left: 12px;
+        }
+        a:hover {
+            cursor: pointer;
+        }
+        svg g:only-of-type {
+            cursor: pointer !important;
+        }
+    </style>
+
+</head>
+<body>	
+    <div id="options">
+        <div id="type">
+            <select class="select" id="type-select">
+                <option value="Average">Average</option>
+                <option value="Median">Median</option>
+                <option value="Maximum">Maximum</option>
+            </select>
+        </div>
+        <div id="slider"></div>
+    </div>
+    
+    <div id="chart_div" style="width: 100%; height: calc(100vh - 80px);"></div>
+
+ <!--   <script nonce="NONCE">
+        var dataArray = DATA;
+        var ranges = RANGES;
+        let colors = COLORS;
+    </script>
+    <script nonce="NONCE" src="JQUERY"></script>
+    <script nonce="NONCE" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script nonce="NONCE" src="NOUISLIDERJS"></script>
+    <script nonce="NONCE" src="TREEMAP"></script> -->
+
+    <script src="./jquery.min.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="./nouislider.js"></script>
+    <script src="./treemap.js"></script>
+
+</body>
+</html>

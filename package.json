@@ -1,0 +1,212 @@
+{
+	"name": "ide_visualization",
+	"displayName": "IDE Visualization",
+	"description": "",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.32.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"*"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"configuration": {
+			"title": "IDE Visualizations",
+			"type": "object",
+			"properties": {
+				"visualization.general.ranges": {
+					"type": "array",
+					"default": [
+						20,
+						40,
+						60,
+						80,
+						100
+					],
+					"description": "Indicates the upper bound bound of the ranges"
+				},
+				"visualization.general.colors": {
+					"type": "array",
+					"default": [
+						"green",
+						"rgb(126, 128, 0)",
+						"orange",
+						"rgb(255, 72, 0)",
+						"red"
+					],
+					"description": "Indicates the colors of each range"
+				},
+				"visualization.exclude.directories": {
+					"type": "array",
+					"default": [
+						"node_modules",
+						"out"
+					],
+					"description": "Determines the folder names that sould not be considered for search and treemap"
+				},
+				"visualization.exclude.filetype": {
+					"type": "array",
+					"default": [
+						".png",
+						".jpg",
+						".jpeg",
+						".svg"
+					],
+					"description": "Determines the file types that sould not be considered for search and treemap"
+				},
+				"visualization.risk.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Risk enabled"
+				},
+				"visualization.languagemodel.hostname": {
+					"type": "string",
+					"default": "http://localhost/webservice/languagemodel.php",
+					"description": "Determines the hostname of the webservice for the language model"
+				},
+				"visualization.languagemodel.aggregator": {
+					"type": "string",
+					"default": "full-token-average",
+					"description": "Indicates the function to calculate entropies",
+					"enum": [
+						"full-token-average",
+						"subtoken-average",
+						"full-token-entropies"
+					],
+					"enumDescriptions": [
+						"average over all full-tokens' entopies (entropy of a full token is a sum of entopies of its subtokens to which a token was split during pre-processing)",
+						"average over all subtokens' entropies ",
+						"a list of full-token entropies (gives freedom to library's clients to compute line-entropy in their own way)"
+					]
+				},
+				"visualization.minimap.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Minimap highlighting enabled"
+				},
+				"visualization.minimap.minrisk": {
+					"type": "number",
+					"default": 75,
+					"description": "Determines the minimal risk level for which a highlighting is shown"
+				},
+				"visualization.search.hostname": {
+					"type": "string",
+					"default": "http://localhost/webservice/search.php",
+					"description": "Determines the hostname of the webservice"
+				},
+				"visualization.highlight.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Highlight enabled"
+				},
+				"visualization.highlight.hostname": {
+					"type": "string",
+					"default": "http://localhost/webservice/highlight.php",
+					"description": "Determines the hostname of the webservice"
+				},
+				"visualization.highlight.ok_color": {
+					"type": "string",
+					"default": "rgba(0,255,0,0.2)",
+					"description": "Determines the ok color"
+				},
+				"visualization.highlight.warning_color": {
+					"type": "string",
+					"default": "rgba(255,0,0,0.2)",
+					"description": "Determines the warning color"
+				},
+				"visualization.codelens.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Codelens enabled"
+				},
+				"visualization.codelens.hostname": {
+					"type": "string",
+					"default": "http://localhost/webservice/codelens.php",
+					"description": "Determines the hostname of the webservice"
+				},
+				"visualization.codelens.number_of_days": {
+					"type": "integer",
+					"minimum": 1,
+					"default": 30,
+					"description": "Limit the code call history up to the specified number of days"
+				},
+				"visualization.codelens.sparkline.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Sparkline enabled"
+				},
+				"visualization.codelens.sparkline.number_of_bars": {
+					"type": "number",
+					"minimum": 1,
+					"default": 15,
+					"description": "Determines the number of bars. Must be smaller than code_call_lens.number_of_days."
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "ide_visualization.showOverview",
+				"title": "Show a report of your code quality",
+				"category": "Show overview"
+			},
+			{
+				"command": "ide_visualization.showSearch",
+				"title": "Show a search form",
+				"category": "Show search"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "ide_visualization.showOverview",
+				"key": "alt+m",
+				"mac": "cmd+o",
+				"when": "editorTextFocus"
+			},
+			{
+				"command": "ide_visualization.showSearch",
+				"key": "alt+shift+s",
+				"mac": "cmd+o",
+				"when": "editorTextFocus"
+			}
+		]
+	},
+	"keybindings": [],
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test"
+	},
+	"devDependencies": {
+		"typescript": "^3.3.1",
+		"vscode": "^1.1.28",
+		"tslint": "^5.12.1",
+		"@types/node": "^10.12.21",
+		"@types/mocha": "^2.2.42"
+	},
+	"dependencies": {
+		"axios": "^0.18.0",
+		"base64-to-image": "^1.0.2",
+		"dom-parser": "^0.1.6",
+		"dom-to-image": "^2.6.0",
+		"fs": "0.0.1-security",
+		"jquery": "^3.4.1",
+		"jsdom": "^15.1.1",
+		"nouislider": "^13.1.5",
+		"opn": "^4.0.2",
+		"request": "^2.88.0",
+		"request-promise-native": "^1.0.7",
+		"squarify": "^1.1.0",
+		"ts-md5": "^1.2.4",
+		"url-query-builder": "^3.0.0",
+		"vscode-languageclient": "^5.2.1"
+	},
+	"workbench.experimental.colorCustomizations": {
+		"editorLineNumbers": "#FF0000"
+	}
+}
