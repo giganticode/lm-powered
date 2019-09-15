@@ -33,7 +33,7 @@ export class Settings {
 
   // General
   static getRanges(): number[] {
-    return Settings.configuration.get<number[]>("general.ranges",  [20,40,60,80,100]);
+    return Settings.configuration.get<number[]>("general.ranges",  [1,2,3,5,7]);
   }
 
   static getRangesWithLowerBound(): number[] {
@@ -46,7 +46,7 @@ export class Settings {
 
   // Codelens
   static isCodelensEnabled(): boolean {
-    return Settings.configuration.get<boolean>("codelens.enabled", true);
+    return Settings.configuration.get<boolean>("codelens.enabled", false);
   }
 
   static isSparklineEnabled(): boolean {
@@ -72,7 +72,7 @@ export class Settings {
 
   // Highlight
   static isHighlightEnabled(): boolean {
-    return Settings.configuration.get<boolean>("highlight.enabled", true);
+    return Settings.configuration.get<boolean>("highlight.enabled", false);
   }
 
   static getHighlightHostname(): string {
@@ -113,6 +113,19 @@ export class Settings {
 
   static getMinimapMinRisk(): number {
     return Settings.configuration.get<number>("minimap.minrisk", 75);
+  }
+
+  // Folding
+  static isFoldingEnabled(): boolean {
+    return Settings.configuration.get<boolean>("folding.enabled", false);
+  }
+
+  static getFoldingMaxRisk(): number {
+    return Settings.configuration.get<number>("folding.maxrisk", 35);
+  }
+
+  static isFoldingOnOpenEnabled(): boolean {
+    return Settings.configuration.get<boolean>("folding.foldonopen", false);
   }
 
 }

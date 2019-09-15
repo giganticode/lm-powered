@@ -5,6 +5,7 @@ const codelens = require('./modules/codelens/codelens');
 const treemap = require('./modules/treemap/treemap');
 const risk = require('./modules/risk/risk');
 const search = require('./modules/search/search');
+const codecompletion = require('./modules/codecompletion/codecompletion');
 import { Settings } from './settings';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -19,11 +20,12 @@ export function activate(context: vscode.ExtensionContext) {
   // read settings from configuration
   Settings.readSettings(context);
 
+  risk.activate(context);
   highlight.activate(context);
   codelens.activate(context);
   treemap.activate(context);
-  risk.activate(context);
   search.activate(context);
+  //codecompletion.activate(context);
 }
 
 export function deactivate() { }

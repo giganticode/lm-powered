@@ -296,14 +296,24 @@ function getRiskLevelsFromWebService() {
 
 	let queryBuilder = new URLQueryBuilder(Settings.getLanguagemodelHostname());
 	queryBuilder.set({
-		extension: path.extname(item.path),
-		languageId: path.extname(item.path).replace(/\./, ''),
-		fileName: item.path,
-		aggregator: Settings.getLanguagemodelAggregator()
+		// extension: path.extname(item.path),
+		// languageId: path.extname(item.path).replace(/\./, ''),
+		// fileName: item.path,
+		// aggregator: Settings.getLanguagemodelAggregator()
 	});
 
+	let timestamp = fs.statSync(item.path).mtimeMs;
+
 	item.risk = [];
-	axios.post(queryBuilder.get(), { input: item.content })
+	axios.post(queryBuilder.get(), { 
+			content: item.content,
+			extension: path.extname(item.path),
+			languageId: path.extname(item.path).replace(/\./, ''),
+			filePath: item.path,
+			timestamp: timestamp,
+			noReturn: false,
+			aggregator: Settings.getLanguagemodelAggregator()
+	 	})
 		.then(response => {
 			item.risk = response.data;
 		})

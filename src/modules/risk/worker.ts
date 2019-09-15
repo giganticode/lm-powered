@@ -49,6 +49,11 @@ interface FileMap {
 export function init(context: Context) {
 	ctx = context;
 	minimapCachePath = path.resolve(ctx.extensionPath, 'images', 'minimap');
+
+	if (!fs.existsSync(minimapCachePath)){
+		fs.mkdirSync(minimapCachePath);
+	}
+
 	if (Settings.isRiskEnabled()) {
 		//doJob();
 		initFileWatcher();
@@ -279,11 +284,7 @@ function uploadToServer() {
 
 	let queryBuilder = new URLQueryBuilder(Settings.getLanguagemodelHostname());
 	queryBuilder.set({
-		extension: item.extension,
-		languageId: item.extension.replace(/\./, ''),
-		fileName: item.path,
-		noReturn: true,
-		aggregator: Settings.getLanguagemodelAggregator()
+		
 	});
 
 	let content = item.content;
@@ -314,7 +315,18 @@ function uploadToServer() {
 
 	// Risk -> languagemodel
 	if (Settings.supportedFileTypes.indexOf(item.extension) > -1) {
-		axios.post(queryBuilder.get(), { input: content })
+
+		let timestamp = fs.statSync(item.path).mtimeMs;
+
+		axios.post(queryBuilder.get(), { 
+			content: content,
+			extension: item.extension,
+			languageId: item.extension.replace(/\./, ''),
+			filePath: item.path,
+			timestamp: timestamp,
+			noReturn: true,
+			aggregator: Settings.getLanguagemodelAggregator()
+		 })
 			.then(response => {
 				//	console.log("request handled for: " + item.path);
 				//	console.log(response.data);

@@ -11,9 +11,9 @@ function initSlider() {
     noUiSlider.create(slider, {
         range: {
             'min': 0,
-            'max': 100
+            'max': 14
         },
-        step: 1,
+        step: 0.1,
         start: ranges.slice(0, -1), // 20, 40, 60, 80
         connect: [true, true, true, true, true],
         format: {
@@ -25,10 +25,14 @@ function initSlider() {
             }
         },
         pips: {
-            mode: 'positions',
-            values: [0].concat(ranges), // 0, 20, 40, 60, 80, 100
-            density: 4,
-            stepped: true
+            mode: 'count',
+            values: 15,
+            density: 4
+            // mode: 'range',
+            // values: [0].concat(ranges), // 0, 20, 40, 60, 80, 100
+            // values: [0, 2, 4, 6, 8, 10 , 12, 14], // 0, 20, 40, 60, 80, 100
+            // density: 3,
+            // stepped: true
         }
     });
     
@@ -174,14 +178,14 @@ function drawVisualization() {
         if (riskLevel && riskLevel === -2) {
             riskFormatted = "Not supported";
         } else if (riskLevel && riskLevel >= 0) {
-            riskFormatted = riskLevel.toFixed(2) + " %";
+            riskFormatted = riskLevel.toFixed(2);
         }
         console.log("Show statistics");
         console.log(data.getValue(row, 0));
         console.log(dataArray[row+1]);
         return '<div style="background:white; color: black; padding:10px; border-style:solid">'+
             '<b>' + dataArray[row + 1][0].v + '</b><br>'+
-            'Risk-level: ' + riskFormatted + '<br> Lines: ' + size +
+            'Entropy-level: ' + riskFormatted + '<br> Lines: ' + size +
             (dataArray[row+1][0].isFile === true ? `<br><a data-path="${dataArray[row+1][0].path}">open</a>` : '') +
             '</div>';
     }

@@ -21,11 +21,11 @@
 				"visualization.general.ranges": {
 					"type": "array",
 					"default": [
-						20,
-						40,
-						60,
-						80,
-						100
+						1,
+						2,
+						3,
+						5,
+						7
 					],
 					"description": "Indicates the upper bound bound of the ranges"
 				},
@@ -63,9 +63,24 @@
 					"default": true,
 					"description": "Risk enabled"
 				},
+				"visualization.folding.enabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "Folding enabled"
+				},
+				"visualization.folding.foldonopen": {
+					"type": "boolean",
+					"default": false,
+					"description": "Fold low risk level code when opening"
+				},
+				"visualization.folding.maxrisk": {
+					"type": "number",
+					"default": 35,
+					"description": "Max risk level for folding"
+				},
 				"visualization.languagemodel.hostname": {
 					"type": "string",
-					"default": "http://localhost/webservice/languagemodel.php",
+					"default": "http://localhost:8080",
 					"description": "Determines the hostname of the webservice for the language model"
 				},
 				"visualization.languagemodel.aggregator": {
@@ -100,7 +115,7 @@
 				},
 				"visualization.highlight.enabled": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Highlight enabled"
 				},
 				"visualization.highlight.hostname": {
@@ -120,7 +135,7 @@
 				},
 				"visualization.codelens.enabled": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Codelens enabled"
 				},
 				"visualization.codelens.hostname": {
@@ -190,13 +205,15 @@
 		"@types/mocha": "^2.2.42"
 	},
 	"dependencies": {
-		"axios": "^0.18.0",
+		"axios": "^0.19.0",
 		"base64-to-image": "^1.0.2",
 		"dom-parser": "^0.1.6",
 		"dom-to-image": "^2.6.0",
 		"fs": "0.0.1-security",
 		"jquery": "^3.4.1",
 		"jsdom": "^15.1.1",
+		"moment": "^2.24.0",
+		"moment-timezone": "^0.5.26",
 		"nouislider": "^13.1.5",
 		"opn": "^4.0.2",
 		"request": "^2.88.0",
