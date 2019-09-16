@@ -69,6 +69,7 @@ interface DecorationMap {
 var decorationMap: DecorationMap = {};
 
 function init(context: Context) {
+	
 	for (let key in ranges) {
 		decorationMap[key] = vscode.window.createTextEditorDecorationType({
 			gutterIconPath: context.asAbsolutePath('./images/gutter/gutter_' + key + '.svg'),

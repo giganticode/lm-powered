@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
   codelens.activate(context);
   treemap.activate(context);
   search.activate(context);
-  //codecompletion.activate(context);
+  codecompletion.activate(context);
 }
 
 export function deactivate() { }

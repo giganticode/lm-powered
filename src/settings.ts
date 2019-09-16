@@ -89,12 +89,12 @@ export class Settings {
 
   // Search
   static getSearchHostname(): string {
-    return Settings.configuration.get<string>("search.hostname", "http://localhost/webservice/languagemodel.php");
+    return Settings.configuration.get<string>("search.hostname", "http://localhost:8080/search");
   }
 
   // Languagemodel (Risk + Treemap)
   static getLanguagemodelHostname(): string {
-    return Settings.configuration.get<string>("languagemodel.hostname", "http://localhost/webservice/languagemodel.php");
+    return Settings.configuration.get<string>("languagemodel.hostname", "http://localhost:8080/languagemodel");
   }
 
   static getLanguagemodelAggregator(): string {
@@ -126,6 +126,15 @@ export class Settings {
 
   static isFoldingOnOpenEnabled(): boolean {
     return Settings.configuration.get<boolean>("folding.foldonopen", false);
+  }
+
+  // Autocompletion
+  static isAutoCompletionEnabled(): boolean {
+    return Settings.configuration.get<boolean>("autocompletion.enabled", false);
+  }
+
+  static getAutoCompletionHostname(): string {
+    return Settings.configuration.get<string>("autocompletion.hostname", "http://localhost:8080/autocompletion");
   }
 
 }

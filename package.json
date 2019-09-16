@@ -63,6 +63,16 @@
 					"default": true,
 					"description": "Risk enabled"
 				},
+				"visualization.autocompletion.enabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "Autocompletion enabled"
+				},
+				"visualization.autocompletion.hostname": {
+					"type": "string",
+					"default": "http://localhost:8080/autocompletion",
+					"description": "Determines the hostname of the webservice for the language model autocompletion"
+				},
 				"visualization.folding.enabled": {
 					"type": "boolean",
 					"default": false,
@@ -80,7 +90,7 @@
 				},
 				"visualization.languagemodel.hostname": {
 					"type": "string",
-					"default": "http://localhost:8080",
+					"default": "http://localhost:8080/languagemodel",
 					"description": "Determines the hostname of the webservice for the language model"
 				},
 				"visualization.languagemodel.aggregator": {
@@ -110,7 +120,7 @@
 				},
 				"visualization.search.hostname": {
 					"type": "string",
-					"default": "http://localhost/webservice/search.php",
+					"default": "http://localhost:8080/search",
 					"description": "Determines the hostname of the webservice"
 				},
 				"visualization.highlight.enabled": {

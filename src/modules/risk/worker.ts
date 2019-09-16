@@ -54,6 +54,10 @@ export function init(context: Context) {
 		fs.mkdirSync(minimapCachePath);
 	}
 
+	if (!fs.existsSync(path.resolve(ctx.extensionPath, 'images', 'gutter'))){
+		fs.mkdirSync(path.resolve(ctx.extensionPath, 'images', 'gutter'));
+	}
+
 	if (Settings.isRiskEnabled()) {
 		//doJob();
 		initFileWatcher();
@@ -61,6 +65,7 @@ export function init(context: Context) {
 }
 
 function initFileWatcher() {
+	let workspaceRoot = vscode.workspace.rootPath as string;
 	busyIndicator.text = "Scanning working directory...";
 	busyIndicator.show();
 	initRootDirectory();
@@ -70,7 +75,6 @@ function initFileWatcher() {
 	busyIndicator.text = "Upload files to webserver...";
 	uploadToServer();
 
-	let workspaceRoot = vscode.workspace.rootPath as string;
 	let watcher = vscode.workspace.createFileSystemWatcher(
 		new vscode.RelativePattern(
 			workspaceRoot,
