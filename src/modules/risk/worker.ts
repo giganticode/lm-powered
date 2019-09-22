@@ -299,23 +299,27 @@ function uploadToServer() {
 		cachedTimestamp = fs.statSync(cachedItemPath).mtime;
 	}
 
-	// Thumbnail for search
-	if (cachedTimestamp === null || cachedTimestamp < item.lastModified) {
-		axios.request({
-			responseType: 'arraybuffer',
-			url: 'http://localhost/webservice/thumbnail.php',
-			method: 'post',
-			data: {
-				input: fs.readFileSync(item.path, 'utf8').toString()
-			}
-		}).then(response => {
-			let path = ctx.asAbsolutePath(`/images/minimap/${item.hash}.png`);
-			fs.writeFileSync(path, response.data);
-		}).catch(error => {
-			console.log("thumbnail error");
-			console.log(error);
-		});
-	}
+	// // Thumbnail for search
+	// if (cachedTimestamp === null || cachedTimestamp < item.lastModified || true) {
+	// 	axios.request({
+	// 		responseType: 'arraybuffer',
+	// 		url: 'http://localhost:8080/thumbnail',
+	// 		method: 'post',
+	// 		data: {
+	// 			content: fs.readFileSync(item.path, 'utf8').toString(),
+	// 			hash: item.hash,
+	// 			// extension: "java",
+	// 			// languageId: "JAVA",
+	// 		}
+	// 	}).then(response => {
+	// 		console.log("Thumbnail created")
+	// 		let path = ctx.asAbsolutePath(`/images/minimap/${item.hash}.png`);
+	// 		fs.writeFileSync(path, response.data);
+	// 	}).catch(error => {
+	// 		console.log("thumbnail error");
+	// 		console.log(error);
+	// 	});
+	// }
 
 	// Risk -> languagemodel
 	if (Settings.supportedFileTypes.indexOf(item.extension) > -1) {
