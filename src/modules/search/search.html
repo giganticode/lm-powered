@@ -44,6 +44,17 @@
 
         div.file {
             overflow: hidden;
+            top: 20px;
+            position: absolute;
+        }
+
+        span.matches {
+            position: absolute;
+            top: 0;
+            display: block;
+            margin-bottom: 5px;
+            margin-left: 5px;
+            font-size: 10px;
         }
 
         div.file img {
@@ -78,8 +89,8 @@
             height: 40px;
             vertical-align: middle;
             display: inline-block;
-            max-width: 100%;
-            width: 100%;
+            max-width: calc(100% - 80px);
+            width: calc(100% - 80px);
             border: 0 none;
             padding: 0 10px;
             background: #fff;
@@ -88,22 +99,33 @@
             transition: .2s ease-in-out;
             transition-property: color, background-color, border;
         }
+        #btn-search {
+            width: 60px;
+            cursor: pointer;
+            height: 40px;
+            vertical-align: middle;
+            display: inline-block;
+            border: 0 none;
+            padding: 0 10px;
+            background: #fff;
+            color: #666;
+            border: 1px solid #e5e5e5;
+            transition: .2s ease-in-out;
+            transition-property: color, background-color, border;            
+        }
     </style>
 </head>
 
 <body>
     <div id="search">
         <input placeholder="Search..." type="search" id="input-search" autofocus />
-        <label>RegEx <input type="checkbox" id="regex" /></label>
-        <progress id="progress" value="0" max="100"></progress>
-        <span id="loading"> loading results...</span>
+        <button id="btn-search">Search</button>
     </div>
 
     <div id="scrollcontainer" class="noselect">
         <div id="container"></div>
     </div>
 
-    <pre id="node" style="font-size: 4px; color: white; max-width: 220px; overflow-x: hidden;"></pre>
     <script src="./jquery.min.js"></script>
     <script src="./dom-to-image.min.js"></script>
     <script src="./search.js"></script>

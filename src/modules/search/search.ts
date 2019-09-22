@@ -5,30 +5,17 @@ import { Settings } from '../../settings';
 import URLQueryBuilder from 'url-query-builder';
 import { Context } from 'vm';
 import {Md5} from 'ts-md5/dist/md5';
-var base64ToImage = require('base64-to-image');
 const axios = require('axios');
 var dataArray: Item[] = [];
 
 let overviewPanel: vscode.WebviewPanel | undefined = undefined;
-var documentReady: boolean = false;
 var ctx: Context;
-var remaining: number = 0;
 var directoryMap: DirectoryMap = {};
-var cacheMap: CacheMap = {};
 var cachedWebViewContent: string | null = null;
+let CACHE_PATH: string;
 
 interface DirectoryMap {
 	[key: string]: Item;
-}
-
-interface CacheMap {
-	[key: string]: CacheItem;
-}
-
-interface CacheItem {
-	path: string;
-	name: string;
-	lastModified: Date;
 }
 
 interface Item {
@@ -37,13 +24,14 @@ interface Item {
 	relativePath: string;
 	lines: number;
 	content: string;
-	match: number[];
+	match: object | null | false;
 	lastModified: Date;
 	hash: string;
 }
 
 export function activate(context: vscode.ExtensionContext) {
 	ctx = context;
+	CACHE_PATH = path.resolve(ctx.extensionPath, 'images', 'minimap');
 
 	let showOverview = vscode.commands.registerCommand('ide_visualization.showSearch', () => {
 		let columnToShowIn: vscode.ViewColumn = (vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : vscode.ViewColumn.One) as vscode.ViewColumn;
@@ -88,7 +76,39 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	context.subscriptions.push(showOverview);
+}
 
+function generateSVGFromPath(filePath: string) {
+	let extension = path.extname(filePath);
+	if (Settings.excludeFileType.indexOf(extension) > -1) {
+		return;
+	}
+
+	let content = fs.readFileSync(filePath).toString();
+	let lines = content.split(/\r\n|\r|\n/);
+	let lineCount = lines.length;
+	content = content.replace("\t", "    ");
+	let lastModified = fs.statSync(filePath).mtime;
+	let hash = Md5.hashStr(filePath) as string;
+
+	// Check if cached file exists
+	let cachePath = path.join(CACHE_PATH, hash + ".svg");
+	if (!fs.existsSync(cachePath) || fs.statSync(cachePath).mtime < lastModified) {
+		// Cached file does not exists or is outdated -> create new one
+		let svg = `<svg width="75" height="${lineCount*3}" viewPort="0 0 32 48" xmlns="http://www.w3.org/2000/svg">`;
+
+		let y = 1;
+		lines.forEach(function (line: string) {
+			let indent = (line.match(/^\s*/)||[""])[0].length;
+			let length = Math.min(line.length - indent, 75);
+			svg += `<polygon points="${indent},${y} ${length},${y} ${length},${y+2} ${indent},${y+2}" fill="rgba(200,200,200,80)"/>`;
+			y += 3;
+		});
+	
+		svg += '</svg>';
+
+		fs.writeFileSync(cachePath, svg);
+	}
 }
 
 function getCachedWebViewContent() {
@@ -128,19 +148,11 @@ function getWebviewContent() {
 }
 
 function initCache() {
-	let cachePath = path.resolve(ctx.extensionPath, 'images', 'minimap');
-
 	try {
-		var files = fs.readdirSync(cachePath);
-
-		files.forEach(function (file: any) {
-			let absolutePath = path.join(cachePath, file);
-			let newItem = {} as CacheItem;
-			newItem.name = file;
-			newItem.path = absolutePath;
-			newItem.lastModified = fs.statSync(absolutePath).mtime;
-			cacheMap[file] = newItem;
-		});
+		for (let file in directoryMap) {
+			let item = directoryMap[file];
+			generateSVGFromPath(item.path);
+		}
 	} catch (e) {
 		console.log(e);
 	}
@@ -170,6 +182,7 @@ function scanItem(item: Item) {
 			newItem.name = file;
 			newItem.relativePath = relativePath;
 			newItem.path = absolutePath;
+			newItem.match = null;
 
 			if (fs.statSync(absolutePath).isDirectory()) {
 				scanItem(newItem);
@@ -193,71 +206,38 @@ function scanItem(item: Item) {
 }
 
 function getSearchResultFromWebServie(item: Item, search: string, regex: boolean) {
-	remaining++;
-
 	let queryBuilder = new URLQueryBuilder(Settings.getSearchHostname());
-	queryBuilder.set({
-		search: search,
-		path: item.path,
-		regex: regex,
-	});
 
 	item.match = [];
-	axios.post(queryBuilder.get(), { input: item.content })
-		.then(response => {
+	axios.post(queryBuilder.get(), { 
+		content: item.content,
+		search: search,
+		extension: path.extname(item.path),
+		languageId: path.extname(item.path).substr(1),
+	 	}).then(response => {
+			console.log("got search result");
+			console.log(response.data);
 			item.match = response.data;
-		})
-		.catch(error => {
+		}).catch(error => {
+			console.log("Search error");
 			console.log(error);
-		})
-		.finally(function () {
-			remaining--;
-			if (remaining === 0) {
-				sendDataToDocument();
-			}
+			item.match = {};
+		}).finally(function () {
+			let index = Object.keys(directoryMap).indexOf(item.relativePath);
+			overviewPanel.webview.postMessage({ command: 'searchResults', data: {index: index, match: item.match} });
 		});
 }
-
-function sendDataToDocument() {
-	if (documentReady) {
-		let data = [];
-
-		var index = 0;
-		for (var key in directoryMap) {
-			let item = directoryMap[key];
-			data.push({ index: index++, match: item.match });
-		}
-
-		overviewPanel.webview.postMessage({ command: 'searchResults', data: data });
-	} else {
-		setTimeout(function () {
-			sendDataToDocument();
-		}, 100);
-	}
-}
-
 function setupMessageListener(context: Context) {
 	overviewPanel.webview.onDidReceiveMessage(
 		message => {
 			switch (message.command) {
 				case "init":
 					// send files to webview
-					documentReady = true;
 					overviewPanel.webview.postMessage({ 
 						command: 'init', 
 						data: dataArray,
-						cache: cacheMap,
 						cachePath: path.join(ctx.extensionPath, 'images', 'minimap') + "/",
 					});
-					break;
-				case "cacheImage":
-					let cachePath = path.join(ctx.extensionPath, 'images', 'minimap');
-					let hash = message.hash;
-					let base64Str = message.img;
-					var imgPath = cachePath + "/";
-					var optionalObj =  {'fileName': hash, 'type':'png'};
-					console.log("CACHE image " + hash);
-					base64ToImage(base64Str,imgPath,optionalObj); 
 					break;
 				case "openFile":
 					let filePath = message.path;
@@ -285,7 +265,6 @@ function setupMessageListener(context: Context) {
 				case "search":
 					let search = message.value;
 					let regex = message.value;
-					remaining = 0;
 					for (let key in directoryMap) {
 						let item = directoryMap[key];
 						getSearchResultFromWebServie(item, search, regex);
