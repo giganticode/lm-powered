@@ -10,7 +10,7 @@ import { resolve } from 'dns';
 
 export function activate(context: vscode.ExtensionContext) {
 	
-	let provider1 = vscode.languages.registerCompletionItemProvider('java', {
+/*	let provider1 = vscode.languages.registerCompletionItemProvider('java', {
 
 		provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
 			// a simple completion item which inserts `Hello World!`
@@ -48,9 +48,9 @@ export function activate(context: vscode.ExtensionContext) {
 				new vscode.CompletionItem('public static void main(string[] args)', vscode.CompletionItemKind.Function),
 			];
 		}
-	});
+	});*/
 
-	const provider2 = vscode.languages.registerCompletionItemProvider(
+/*	const provider2 = vscode.languages.registerCompletionItemProvider(
 		'java',
 		{
 			provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
@@ -71,7 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		},
 		'.' // triggered whenever a '.' is being typed
-	);
+	);*/
 
 	const lmProvider = vscode.languages.registerCompletionItemProvider(
 		'java',
@@ -98,7 +98,14 @@ export function activate(context: vscode.ExtensionContext) {
 						languageId: 'java'
 					}).then(response => {
 							// response is an array of proposals
-							resolve(response.data.map(item => {return new vscode.CompletionItem(item);}));
+							console.log("GOT PREDICTION RESPONSE")
+							console.log(response.data)
+
+							let proposals = response.data.map(item => {return {text: item[0], value: item[1]};});
+							proposals.sort((a, b) => (a.value < b.value));
+							
+
+							resolve(proposals.map(item => {return new vscode.CompletionItem(item.text);}));
 					}).catch(error => {
 							if (error.response.status === 406) {
 								// language type not supported
@@ -109,8 +116,10 @@ export function activate(context: vscode.ExtensionContext) {
 					});					
 				});
 			}
-		}
+		}, 
+		' ', '.', '-', '\t', '', '*'
 	);
 
-	context.subscriptions.push(provider1, provider2, lmProvider);
+	// context.subscriptions.push(provider1, provider2, lmProvider);
+	context.subscriptions.push(lmProvider);
 }
