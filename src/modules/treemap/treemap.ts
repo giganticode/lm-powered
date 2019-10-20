@@ -4,7 +4,6 @@ import * as fs from "fs";
 import { Settings } from '../../settings';
 import { Context } from 'vm';
 const axios = require('axios');
-import URLQueryBuilder from 'url-query-builder';
 
 let overviewPanel: vscode.WebviewPanel | undefined = undefined;
 var documentReady: boolean = false;
@@ -110,13 +109,14 @@ function getWebviewContent() {
 	const resourcePath = path.resolve(ctx.extensionPath, 'resources');
 	let fileContent = fs.readFileSync(htmlPath).toString();
 
-	let colors = Settings.getColors();
+	let ranges = Settings.getColorRanges();
 
 	initDirectoryMap();
 
 	var cssColors = "";
-	for (let key in colors) {
-		let color = colors[key];
+	for (let key in ranges) {
+		let item = ranges[key];
+		let color = item.Color;
 		cssColors += `.noUi-connects .noUi-connect:nth-child(${(1 + parseInt(key))}) \n{background-color: ${color} !important;}\n`;
 	}
 
@@ -285,37 +285,26 @@ function getRiskLevelsFromWebService() {
 	if (pending.length === 0) {
 		// TODO: every time a file is received
 		calcRisk(directoryMap["root"], RiskType.Average);
-		console.log("directoryMap")
-		console.log(directoryMap);
 		sendDataToDocument();
-		console.log("all done..");
 		return;
 	}
 
 	let item = pending.shift() as Item;
 
-	let queryBuilder = new URLQueryBuilder(Settings.getLanguagemodelHostname());
-	queryBuilder.set({
-		// extension: path.extname(item.path),
-		// languageId: path.extname(item.path).replace(/\./, ''),
-		// fileName: item.path,
-		// aggregator: Settings.getLanguagemodelAggregator()
-	});
-
+	let url = Settings.getLanguagemodelHostname();
 	let timestamp = fs.statSync(item.path).mtimeMs;
 
 	item.risk = [];
-	axios.post(queryBuilder.get(), { 
+	axios.post(url, { 
 			content: item.content,
 			extension: path.extname(item.path),
 			languageId: path.extname(item.path).replace(/\./, ''),
 			filePath: item.path,
 			timestamp: timestamp,
 			noReturn: false,
-			aggregator: Settings.getLanguagemodelAggregator()
 	 	})
 		.then(response => {
-			item.risk = response.data;
+			item.risk = response.data.map(e => e.aggregated_result.bin_entropy);
 		})
 		.catch(error => {
 			if (error.response.status === 406) {
@@ -366,8 +355,7 @@ function setupWebviewListeners(context: Context) {
 					overviewPanel.webview.postMessage({ 
 						command: 'init', 
 						data: data,
-						ranges: Settings.getRanges(),
-						colors: Settings.getColors()
+						colorRanges: Settings.getColorRanges(),
 					});
 					break;
 				case "openFile":

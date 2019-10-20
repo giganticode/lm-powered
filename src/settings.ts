@@ -1,6 +1,12 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
+export interface ColorRange {
+  Minimum: number;
+  Maximum: number;
+  Color: string;
+}
+
 export class Settings {
   // Settings cache
   private static configuration: vscode.WorkspaceConfiguration;
@@ -14,9 +20,10 @@ export class Settings {
     this.excludeFileType = Settings.configuration.get<string[]>("exclude.filetype", [".png", ".jpg", ".jpeg", ".svg"]);
 
     // create icons
-    let colors = Settings.getColors();
+    let colors = Settings.getColorRanges();
     for (let key in colors) {
-      let color = colors[key];
+      let item: ColorRange = colors[key];
+      let color = item.Color;
       let path = context.asAbsolutePath(`/images/gutter/gutter_${(1+parseInt(key))}.svg`);
       let svg = '<svg width="32" height="48" viewPort="0 0 32 48" xmlns="http://www.w3.org/2000/svg"><polygon points="16,0 32,0 32,48 16,48" fill="' + color + '"/></svg>';
       Settings.createFile(path, svg);
@@ -32,16 +39,14 @@ export class Settings {
   }
 
   // General
-  static getRanges(): number[] {
-    return Settings.configuration.get<number[]>("general.ranges",  [1,2,3,5,7]);
-  }
-
-  static getRangesWithLowerBound(): number[] {
-    return [0].concat(Settings.getRanges());
-  }
-
-  static getColors(): string[] {
-    return Settings.configuration.get<string[]>("general.colors",  ["green", "rgb(126, 128, 0)", "orange", "rgb(255, 72, 0)", "red"]);
+  static getColorRanges(): ColorRange[] {
+    return Settings.configuration.get<ColorRange[]>("general.colorranges", [
+      {"Minimum": 0, "Maximum": 1, "Color": "green"}, 
+      {"Minimum": 1, "Maximum": 2, "Color": "rgb(126, 128, 0)"}, 
+      {"Minimum": 2, "Maximum": 3, "Color": "orange"},
+      {"Minimum": 3, "Maximum": 5, "Color": "rgb(255, 72, 0)"}, 
+      {"Minimum": 5, "Maximum": 25, "Color": "red"}
+    ]);
   }
 
   // Codelens
@@ -95,10 +100,6 @@ export class Settings {
   // Languagemodel (Risk + Treemap)
   static getLanguagemodelHostname(): string {
     return Settings.configuration.get<string>("languagemodel.hostname", "http://localhost:8080/languagemodel");
-  }
-
-  static getLanguagemodelAggregator(): string {
-    return Settings.configuration.get<string>("languagemodel.aggregator", "full-token-average");
   }
 
   // Risk

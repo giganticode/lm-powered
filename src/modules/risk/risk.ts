@@ -1,23 +1,52 @@
 import * as vscode from 'vscode';
 import { Context } from 'vm';
-import { Settings } from '../../settings';
+import { Settings, ColorRange } from '../../settings';
 import * as path from 'path';
 const fs = require('fs');
-import URLQueryBuilder from 'url-query-builder';
 const axios = require('axios');
 const minimap = require('./minimap');
 const worker = require('./worker');
-var ranges: number[];
-var momenttz = require('moment-timezone');
-var moment = require('moment');
+
+var ranges: ColorRange[];
+var decorationMap: DecorationMap = {};
+var entropyCacheMap: EntropyCacheMap = {};
+
+interface DecorationMap {
+	[key: number]: vscode.TextEditorDecorationType;
+}
+
+interface EntropyLine {
+	aggregated_result: AggregatedResult;
+	prep_metadata: PrepMetadata;
+	prep_text: [string];
+	results: EntropyResults;
+	text: string;
+}
+
+interface EntropyResults {
+	bin_entropy: [number];
+}
+
+interface AggregatedResult {
+	bin_entropy: number;
+}
+
+interface PrepMetadata {
+	nonprocessable_tokens: [string];
+	word_boundaries: [number];
+}
+
+interface EntropyCacheMap {
+	[key: string]: [EntropyLine];
+}
 
 export function activate(context: vscode.ExtensionContext) {
-	ranges = Settings.getRangesWithLowerBound();
+	ranges = Settings.getColorRanges();
+
 	init(context);
 	minimap.init();
 	
 	vscode.workspace.onDidOpenTextDocument((event) => {
-		console.log("opened");
 		var e = vscode.window.activeTextEditor as vscode.TextEditor;
 		let content = e.document.getText();
 		format(e, content, true);
@@ -30,20 +59,15 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	vscode.workspace.onDidChangeTextDocument((event) => {
-		//var e = vscode.window.activeTextEditor as vscode.TextEditor;
-		//let content = e.document.getText();
-		//format(e, content);
+		var e = vscode.window.activeTextEditor as vscode.TextEditor;
+		let content = e.document.getText();
+		format(e, content, false);
 	});
 	
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		if (editor) {
 			let activeEditor = editor as vscode.TextEditor;
-		
 			format(activeEditor, activeEditor.document.getText(), true);
-	
-			if (editor) {
-				//triggerUpdateDecorations();
-			}
 		}
 	}, null, context.subscriptions);
 
@@ -59,20 +83,64 @@ export function activate(context: vscode.ExtensionContext) {
 		format(activeEditor, activeEditor.document.getText(), true);
 	}
 
-	
-}
+	vscode.languages.registerHoverProvider('java', {
+		provideHover(document, position, token) {
+			let fileEntropyInfo = entropyCacheMap[document.fileName];
+			let lineEntropyInfo = fileEntropyInfo[position.line];
+			if (!fileEntropyInfo || !lineEntropyInfo) {
+				return {contents: "No data available"};
+			}
+			let remainingText = lineEntropyInfo.text;
+			let targetColumn = position.character;
+			let globalIndex = 0;
 
-interface DecorationMap {
-	[key: number]: vscode.TextEditorDecorationType;
-}
+			for (let j = 0; j < lineEntropyInfo.prep_text.length; j++) {
+				let text = lineEntropyInfo.prep_text[j].replace('</t>', '');
+				let entropy = lineEntropyInfo.results.bin_entropy[j];
+   
+				// search text in line Text
+				let found = false;
+				let startIndex = 0;
+				let endIndex = text.length;
+				let iteration = 0;
+				while (found === false) {
+   
+					if (remainingText.substring(startIndex, endIndex) === text) {
+						remainingText = remainingText.substring(endIndex);
+						
+						if (targetColumn >= globalIndex + startIndex && targetColumn < globalIndex + endIndex) {
+							return {
+								contents: [`Line entropy: ${lineEntropyInfo.aggregated_result.bin_entropy.toFixed(3)} - Token '${text}' -> ${entropy.toFixed(3)}`]
+							};
+						}
 
-var decorationMap: DecorationMap = {};
+						globalIndex += endIndex;
+						found = true;
+					}
+					else {
+						// handle a whitespace that is not part of the token
+						startIndex++;
+						endIndex++;
+					}
+					iteration++;
+					if (iteration > 12) {
+						break;
+					}
+				}
+			}
+
+		  return {
+			contents: [`Line entropy: ${lineEntropyInfo.aggregated_result.bin_entropy.toFixed(3)}`]
+		  };
+		}
+	  });
+}
 
 function init(context: Context) {
-	
-	for (let key in ranges) {
-		decorationMap[key] = vscode.window.createTextEditorDecorationType({
-			gutterIconPath: context.asAbsolutePath('./images/gutter/gutter_' + key + '.svg'),
+	decorationMap = {};
+	for (let i = 0; i <= ranges.length; i++) {
+		decorationMap[i] = vscode.window.createTextEditorDecorationType({
+			gutterIconPath: context.asAbsolutePath('./images/gutter/gutter_' + (i) + '.svg'),
 			gutterIconSize: 'contain',
 			textDecoration: 'none'
 		});
@@ -84,27 +152,17 @@ function format(editor: vscode.TextEditor, document: string, openEvent: boolean)
 		return;
 	}
 
-	let queryBuilder = new URLQueryBuilder(Settings.getLanguagemodelHostname());
+	let url = Settings.getLanguagemodelHostname();
 	let filePath = editor._documentData._document.fileName;
-	queryBuilder.set({
-	/*	languageId: editor._documentData._languageId,
-		extension: path.extname(filePath),
-		filePath: filePath,
-		aggregator: Settings.getLanguagemodelAggregator(),
-		noReturn: false,
-		timeStamp: new Date()*/
-	});
-
 	let timestamp = fs.statSync(filePath).mtimeMs;
 
-	axios.post(queryBuilder.get(), { 
+	axios.post(url, { 
 		content: document,
 		extension: path.extname(filePath),
 		languageId: editor._documentData._languageId,
 		filePath: filePath,
 		timestamp: timestamp,
 		noReturn: false,
-		aggregator: Settings.getLanguagemodelAggregator()
 	})
 		.then(response => {
 			console.log("got feedback");
@@ -114,6 +172,8 @@ function format(editor: vscode.TextEditor, document: string, openEvent: boolean)
 			if (Settings.isMinimapEnabled()) {
 				minimap.decorate(editor, response.data);
 			}
+			console.log("format", editor)
+			entropyCacheMap[editor._documentData._document.fileName] = response.data;
 		})
 		.catch(error => {
 			if (error.response.status === 406) {
@@ -126,8 +186,8 @@ function format(editor: vscode.TextEditor, document: string, openEvent: boolean)
 
 function getRangeIndexForRisk(riskLevel: number) {
 	var index = 0;
-	for (var i = 0; i < ranges.length - 1; i++) {
-		if (riskLevel > ranges[i] && riskLevel <= ranges[i + 1]) {
+	for (var i = 0; i < ranges.length; i++) {
+		if (riskLevel > ranges[i].Minimum && riskLevel <= ranges[i].Maximum) {
 			index = i + 1;
 			break;
 		}
@@ -135,14 +195,14 @@ function getRangeIndexForRisk(riskLevel: number) {
 	return index;
 }
 
-function decorate(editor: vscode.TextEditor, scanResult: number[], openEvent: boolean) {
+function decorate(editor: vscode.TextEditor, scanResult: any[], openEvent: boolean) {
 	let decorationsMap: { [id: number]: any } = {};
 
 	console.log("scanresult:")
 	console.log(scanResult)
 
 	for (var i = 0; i < scanResult.length; i++) {
-		var riskLevel: number = scanResult[i];
+		var riskLevel: number = scanResult[i].aggregated_result.bin_entropy;
 		let decoration = {
 			range: new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, 0))
 		};
@@ -206,34 +266,26 @@ class ImportFoldingRangeProvider implements vscode.FoldingRangeProvider {
 	provideFoldingRanges(document: vscode.TextDocument): vscode.FoldingRange[] |Thenable<vscode.FoldingRange[]> {
 
 		return new Promise<vscode.FoldingRange[]>(async (resolve, reject) => {
-			let queryBuilder = new URLQueryBuilder(Settings.getLanguagemodelHostname());
+			let url = Settings.getLanguagemodelHostname();
 			let filePath = document.fileName;
-			queryBuilder.set({
-			/*	languageId: document.languageId,
-				extension: path.extname(filePath),
-				fileName: filePath,
-				aggregator: Settings.getLanguagemodelAggregator()*/
-			});
-
 			let timestamp = fs.statSync(filePath).mtimeMs;
 			
-			axios.post(queryBuilder.get(), {
+			axios.post(url, {
 					content: document.getText(),
 					extension: path.extname(filePath),
 					languageId: document.languageId,
 					filePath: filePath,
 					timestamp: timestamp,
 					noReturn: false,
-					aggregator: Settings.getLanguagemodelAggregator()
 				})
-				.then(response => {
+				.then((response: any) => {
 					console.log("got feedback for folding range provider");
 					console.log(response.data);
 					let ranges = getFoldingRanges(response.data);
 					console.log(ranges)
 					resolve(ranges);
 				})
-				.catch(error => {
+				.catch((error: any) => {
 					if (error.response.status === 406) {
 						// file not supported
 						console.log("Folding: file not supported")

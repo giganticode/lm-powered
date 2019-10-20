@@ -1,8 +1,9 @@
 const vscode = acquireVsCodeApi();
 const previousState = vscode.getState();
 var dataArray;
-var ranges;
-var colors;
+// var ranges;
+// var colors;
+var colorRanges;
 
 // Range slider
 function initSlider() {
@@ -14,7 +15,7 @@ function initSlider() {
             'max': 14
         },
         step: 0.1,
-        start: ranges.slice(0, -1), // 20, 40, 60, 80
+        start: colorRanges.slice(0, -1).map(e => e.Maximum), // 20, 40, 60, 80
         connect: [true, true, true, true, true],
         format: {
             to: function (value) {
@@ -37,7 +38,12 @@ function initSlider() {
     });
     
     slider.noUiSlider.on('change', function(values, handle) {
-        ranges[handle] = values[handle];
+        console.log("changes UI slider")
+        console.log(colorRanges)
+        console.log(values)
+        console.log(handle)
+        colorRanges[handle].Maximum = values[handle];
+        colorRanges[handle + 1].Minimum = values[handle];
         drawVisualization();
     });
 }
@@ -55,8 +61,9 @@ window.addEventListener('message', event => {
     switch (message.command) {
         case 'init':
             dataArray = message.data;
-            ranges = message.ranges;
-            colors = message.colors;
+            colorRanges = message.colorRanges;
+            // ranges = message.ranges;
+            // colors = message.colors;
             console.log("got init message")
             console.log(message);
             initSlider();
@@ -122,17 +129,17 @@ function drawVisualization() {
         if (risk === -2)
             return 'LIGHTGREY';
         
-        if (risk === -1) 
+        if (risk === -1 || risk === 0) 
             return 'LIGHTYELLOW'
 
         var index = 0;
-        for (var i = 0; i < ranges.length; i++) {
-            if (risk <= ranges[i]) {
+        for (var i = 0; i < colorRanges.length; i++) {
+            if (risk > colorRanges[i].Minimum && risk <= colorRanges[i].Maximum) {
                 index = i;
                 break;
             }
         }
-        return colors[index];
+        return colorRanges[index].Color;
     }
 
     google.visualization.events.addListener(treemap, 'select', showFile);

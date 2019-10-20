@@ -18,14 +18,14 @@
 			"title": "IDE Visualizations",
 			"type": "object",
 			"properties": {
-				"visualization.general.ranges": {
+				"visualization.general.colorranges": {
 					"type": "array",
 					"default": [
-						1,
-						2,
-						3,
-						5,
-						7
+						{"Minimum": 0, "Maximum": 2, "Color": "green"},
+						{"Minimum": 2, "Maximum": 4, "Color": "rgb(126, 128, 0)"},
+						{"Minimum": 4, "Maximum": 8, "Color": "orange"},
+						{"Minimum": 8, "Maximum": 16, "Color": "rgb(255, 72, 0)"},
+						{"Minimum": 16, "Maximum": 25, "Color": "red"}
 					],
 					"description": "Indicates the upper bound bound of the ranges"
 				},
@@ -92,21 +92,6 @@
 					"type": "string",
 					"default": "http://localhost:8080/languagemodel",
 					"description": "Determines the hostname of the webservice for the language model"
-				},
-				"visualization.languagemodel.aggregator": {
-					"type": "string",
-					"default": "full-token-average",
-					"description": "Indicates the function to calculate entropies",
-					"enum": [
-						"full-token-average",
-						"subtoken-average",
-						"full-token-entropies"
-					],
-					"enumDescriptions": [
-						"average over all full-tokens' entopies (entropy of a full token is a sum of entopies of its subtokens to which a token was split during pre-processing)",
-						"average over all subtokens' entropies ",
-						"a list of full-token entropies (gives freedom to library's clients to compute line-entropy in their own way)"
-					]
 				},
 				"visualization.minimap.enabled": {
 					"type": "boolean",

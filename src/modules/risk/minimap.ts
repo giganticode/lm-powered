@@ -1,20 +1,19 @@
 import * as vscode from 'vscode';
-import {Settings} from '../../settings';
+import {Settings, ColorRange} from '../../settings';
 
-var colors: string[];
-var ranges: number[];
+var ranges: ColorRange[];
 var decorationMap: DecorationMap = {};
 
 interface DecorationMap {
     [key: number]: vscode.TextEditorDecorationType;
 }
 
-export function decorate(editor: vscode.TextEditor, scanResult: number[])  {
+export function decorate(editor: vscode.TextEditor, scanResult: any[])  {
     let minRiskLevel = Settings.getMinimapMinRisk();
 	let decorationsMap: {[key: number] : any} = {};
 
 	for (var i = 0; i < scanResult.length; i++) {
-        var riskLevel: number = scanResult[i];
+        var riskLevel: number = scanResult[i].aggregated_result.bin_entropy;
         let range = {
             range: new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, 0))
         };
@@ -35,29 +34,30 @@ export function decorate(editor: vscode.TextEditor, scanResult: number[])  {
 }
 
 export function init() {
-    colors = Settings.getColors();
-    ranges = Settings.getRanges();
-    for (let key in colors) {
-        let decorationStyle = getDecorationForRisk(parseInt(key));
-        decorationMap[key] = vscode.window.createTextEditorDecorationType(decorationStyle);
+    ranges = Settings.getColorRanges();
+    decorationMap = {};
+    for (let key in ranges) {
+        let item = ranges[key];
+        let decorationStyle = {
+            backgroundColor: 'light-grey',
+            overviewRulerColor: item.Color
+        };
+        decorationMap[parseInt(key) + 1] = vscode.window.createTextEditorDecorationType(decorationStyle);
     }
-    decorationMap[-1] = vscode.window.createTextEditorDecorationType(getDecorationForRisk(-1));
-}
-
-function getDecorationForRisk(rangeIndex: number) {
-    return {
+    decorationMap[0] = vscode.window.createTextEditorDecorationType({
         backgroundColor: 'light-grey',
-        overviewRulerColor: rangeIndex >= 0 ? colors[rangeIndex] : 'transparent'
-    };
+        overviewRulerColor: 'transparent'
+    });
 }
 
 function getRangeIndexForRisk(riskLevel: number, minRiskLevel: number) {
     if (riskLevel < minRiskLevel) {
-        return -1;
+        return 0;
     }
     var index = 0;
-    for (var i = 0; i < ranges.length - 1; i++) {
-        if (riskLevel > ranges[i] && riskLevel <= ranges[i+1]) {
+    for (var i = 0; i < ranges.length; i++) {
+        let range = ranges[i];
+        if (riskLevel > range.Minimum && riskLevel <= range.Maximum) {
             index = i + 1;
             break;
         }

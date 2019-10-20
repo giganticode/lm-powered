@@ -6,6 +6,7 @@ import * as path from 'path';
 import { Context } from 'vm';
 const axios = require('axios');
 import { Md5 } from 'ts-md5/dist/md5';
+const extension = require('../../extension');
 
 
 var pending: Item[] = [];
@@ -86,11 +87,11 @@ function initFileWatcher() {
 	);
 
 	function logFile(file: File) {
-		var children = [];
+		let children = [];
 		for(let index in file.children) {
 			children.push(index);
 		}
-		var v = {
+		let v = {
 		path: file.path,
 		relativePath: file.relativePath,
 		name: file.name,
@@ -108,10 +109,7 @@ function initFileWatcher() {
 		console.log("Find item for: "+relativePath);
 
 		let parents = relativePath.split(path.sep);
-	//	console.log("parents");
-	//	console.log(parents);
-
-		var currentDirectory = rootDirectory;
+		let currentDirectory = rootDirectory;
 
 		for (let index in parents) {
 			let dir = parents[index];
@@ -326,6 +324,9 @@ function uploadToServer() {
 
 		let timestamp = fs.statSync(item.path).mtimeMs;
 
+		console.log("UPLOAD FILE")
+		console.log(extension.currentWorkspaceFolder);
+
 		axios.post(queryBuilder.get(), { 
 			content: content,
 			extension: item.extension,
@@ -333,7 +334,7 @@ function uploadToServer() {
 			filePath: item.path,
 			timestamp: timestamp,
 			noReturn: true,
-			aggregator: Settings.getLanguagemodelAggregator()
+			workspaceFolder: extension.currentWorkspaceFolder
 		 })
 			.then(response => {
 				//	console.log("request handled for: " + item.path);
