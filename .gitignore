@@ -4,3 +4,4 @@ node_modules
 *.vsix
 images/minimap
 src/test
+images/gutter

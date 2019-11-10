@@ -21,24 +21,33 @@
 				"visualization.general.colorranges": {
 					"type": "array",
 					"default": [
-						{"Minimum": 0, "Maximum": 2, "Color": "green"},
-						{"Minimum": 2, "Maximum": 4, "Color": "rgb(126, 128, 0)"},
-						{"Minimum": 4, "Maximum": 8, "Color": "orange"},
-						{"Minimum": 8, "Maximum": 16, "Color": "rgb(255, 72, 0)"},
-						{"Minimum": 16, "Maximum": 25, "Color": "red"}
+						{
+							"Minimum": 0,
+							"Maximum": 2,
+							"Color": "green"
+						},
+						{
+							"Minimum": 2,
+							"Maximum": 4,
+							"Color": "rgb(126, 128, 0)"
+						},
+						{
+							"Minimum": 4,
+							"Maximum": 8,
+							"Color": "orange"
+						},
+						{
+							"Minimum": 8,
+							"Maximum": 16,
+							"Color": "rgb(255, 72, 0)"
+						},
+						{
+							"Minimum": 16,
+							"Maximum": 25,
+							"Color": "red"
+						}
 					],
 					"description": "Indicates the upper bound bound of the ranges"
-				},
-				"visualization.general.colors": {
-					"type": "array",
-					"default": [
-						"green",
-						"rgb(126, 128, 0)",
-						"orange",
-						"rgb(255, 72, 0)",
-						"red"
-					],
-					"description": "Indicates the colors of each range"
 				},
 				"visualization.exclude.directories": {
 					"type": "array",
@@ -68,9 +77,9 @@
 					"default": false,
 					"description": "Autocompletion enabled"
 				},
-				"visualization.autocompletion.hostname": {
+				"visualization.autocompletion.url": {
 					"type": "string",
-					"default": "http://localhost:8080/autocompletion",
+					"default": "http://localhost:8080/api/autocompletion",
 					"description": "Determines the hostname of the webservice for the language model autocompletion"
 				},
 				"visualization.folding.enabled": {
@@ -88,9 +97,30 @@
 					"default": 35,
 					"description": "Max risk level for folding"
 				},
-				"visualization.languagemodel.hostname": {
+				"visualization.languagemodel.model": {
 					"type": "string",
-					"default": "http://localhost:8080/languagemodel",
+					"default": "langmodel-large-split_10k_2_1024_191007.112241_-_langmodel-large-split_10k_2_1024_191022.141344",
+					"description": "Indicates the name of the languagemodel to use for entropy calculation",
+					"enum": [
+						"langmodel-large-split_10k_2_1024_191007.112241_-_langmodel-large-split_10k_2_1024_191022.141344",
+						"langmodel-large-split_10k_3_1024_191007.112257_-_langmodel-large-split_10k_3_1024_191022.134822",
+						"langmodel-large-split_10k_2_2048_191007.112249_-_langmodel-large-split_10k_2_2048_191022.141335",
+						"langmodel-large-split_10k_1_512_190926.120146",
+						"langmodel-small-split_10k_1_512_190906.154943",
+						"dev_10k_1_10_190923.132328"
+					],
+					"enumDescriptions": [
+						"Default/Best - langmodel-large-split_10k_2_1024_191007.112241_-_langmodel-large-split_10k_2_1024_191022.141344",
+						"langmodel-large-split_10k_3_1024_191007.112257_-_langmodel-large-split_10k_3_1024_191022.134822",
+						"langmodel-large-split_10k_2_2048_191007.112249_-_langmodel-large-split_10k_2_2048_191022.141335",
+						"Medium - langmodel-large-split_10k_1_512_190926.120146",
+						"Tiny - langmodel-small-split_10k_1_512_190906.154943",
+						"Random - dev_10k_1_10_190923.132328"
+					]
+				},
+				"visualization.languagemodel.url": {
+					"type": "string",
+					"default": "http://localhost:8080/api/languagemodel",
 					"description": "Determines the hostname of the webservice for the language model"
 				},
 				"visualization.minimap.enabled": {
@@ -100,20 +130,30 @@
 				},
 				"visualization.minimap.minrisk": {
 					"type": "number",
-					"default": 75,
+					"default": 16,
 					"description": "Determines the minimal risk level for which a highlighting is shown"
 				},
-				"visualization.search.hostname": {
+				"visualization.search.url": {
 					"type": "string",
-					"default": "http://localhost:8080/search",
+					"default": "http://localhost:8080/api/search",
 					"description": "Determines the hostname of the webservice"
+				},
+				"visualization.search.matchindicator": {
+					"type": "number",
+					"default": 20,
+					"description": "When the difference in % is bigger than the specified value, the token matches to search query"
+				},
+				"visualization.search.queryinterval": {
+					"type": "number",
+					"default": 10,
+					"description": "Interval: after each n-th line a search-quer-comment is inserted"
 				},
 				"visualization.highlight.enabled": {
 					"type": "boolean",
 					"default": false,
 					"description": "Highlight enabled"
 				},
-				"visualization.highlight.hostname": {
+				"visualization.highlight.url": {
 					"type": "string",
 					"default": "http://localhost/webservice/highlight.php",
 					"description": "Determines the hostname of the webservice"
@@ -133,7 +173,7 @@
 					"default": false,
 					"description": "Codelens enabled"
 				},
-				"visualization.codelens.hostname": {
+				"visualization.codelens.url": {
 					"type": "string",
 					"default": "http://localhost/webservice/codelens.php",
 					"description": "Determines the hostname of the webservice"
@@ -160,13 +200,13 @@
 		"commands": [
 			{
 				"command": "ide_visualization.showOverview",
-				"title": "Show a report of your code quality",
+				"title": "Show a report of your code quality represented by a treemap",
 				"category": "Show overview"
 			},
 			{
 				"command": "ide_visualization.showSearch",
-				"title": "Show a search form",
-				"category": "Show search"
+				"title": "Send contextual search queries to the languagemodel",
+				"category": "Contextual search"
 			}
 		],
 		"keybindings": [
@@ -202,7 +242,6 @@
 	"dependencies": {
 		"axios": "^0.19.0",
 		"dom-parser": "^0.1.6",
-		"dom-to-image": "^2.6.0",
 		"fs": "0.0.1-security",
 		"jquery": "^3.4.1",
 		"jsdom": "^15.1.1",
