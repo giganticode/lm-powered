@@ -1,18 +1,16 @@
 import * as vscode from 'vscode';
 import { Settings } from '../../settings';
-import URLQueryBuilder from 'url-query-builder';
 import * as fs from "fs";
 import * as path from 'path';
 import { Context } from 'vm';
 const axios = require('axios');
 import { Md5 } from 'ts-md5/dist/md5';
+import { WorkspaceFolder } from 'vscode-languageclient';
 const extension = require('../../extension');
-
 
 var pending: Item[] = [];
 let busyIndicator = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
 var ctx: Context;
-var minimapCachePath: string;
 
 var rootDirectory: File;
 var pendingFiles: File[] = [];
@@ -49,15 +47,6 @@ interface FileMap {
 
 export function init(context: Context) {
 	ctx = context;
-	minimapCachePath = path.resolve(ctx.extensionPath, 'images', 'minimap');
-
-	if (!fs.existsSync(minimapCachePath)){
-		fs.mkdirSync(minimapCachePath);
-	}
-
-	if (!fs.existsSync(path.resolve(ctx.extensionPath, 'images', 'gutter'))){
-		fs.mkdirSync(path.resolve(ctx.extensionPath, 'images', 'gutter'));
-	}
 
 	if (Settings.isRiskEnabled()) {
 		//doJob();
@@ -66,7 +55,6 @@ export function init(context: Context) {
 }
 
 function initFileWatcher() {
-	let workspaceRoot = vscode.workspace.rootPath as string;
 	busyIndicator.text = "Scanning working directory...";
 	busyIndicator.show();
 	initRootDirectory();
@@ -76,109 +64,109 @@ function initFileWatcher() {
 	busyIndicator.text = "Upload files to webserver...";
 	uploadToServer();
 
-	let watcher = vscode.workspace.createFileSystemWatcher(
-		new vscode.RelativePattern(
-			workspaceRoot,
-			'**/*'
-		),
-		false,
-		false,
-		false
-	);
+	// let watcher = vscode.workspace.createFileSystemWatcher(
+	// 	new vscode.RelativePattern(
+	// 		workspaceRoot,
+	// 		'**/*'
+	// 	),
+	// 	false,
+	// 	false,
+	// 	false
+	// );
 
-	function logFile(file: File) {
-		let children = [];
-		for(let index in file.children) {
-			children.push(index);
-		}
-		let v = {
-		path: file.path,
-		relativePath: file.relativePath,
-		name: file.name,
-		extension: file.extension,
-		hash: file.hash,
-		isDirectory: file.isDirectory,
-		lastModified: file.lastModified,
-		children: children
-		};
-		return v;		
-	}
+	// function logFile(file: File) {
+	// 	let children = [];
+	// 	for(let index in file.children) {
+	// 		children.push(index);
+	// 	}
+	// 	let v = {
+	// 	path: file.path,
+	// 	relativePath: file.relativePath,
+	// 	name: file.name,
+	// 	extension: file.extension,
+	// 	hash: file.hash,
+	// 	isDirectory: file.isDirectory,
+	// 	lastModified: file.lastModified,
+	// 	children: children
+	// 	};
+	// 	return v;		
+	// }
 
-	function findFile(absolutePath: string): File {
-		let relativePath = absolutePath.substr(rootDirectory.path.length + 1);
-		console.log("Find item for: "+relativePath);
+	// function findFile(absolutePath: string): File {
+	// 	let relativePath = absolutePath.substr(rootDirectory.path.length + 1);
+	// 	console.log("Find item for: "+relativePath);
 
-		let parents = relativePath.split(path.sep);
-		let currentDirectory = rootDirectory;
+	// 	let parents = relativePath.split(path.sep);
+	// 	let currentDirectory = rootDirectory;
 
-		for (let index in parents) {
-			let dir = parents[index];
-			console.log("  search " + dir);
-			if (!currentDirectory.children[dir]) {
-				console.log("ERROR FILE NOT FOUND");
-			}
-			currentDirectory = currentDirectory.children[dir];
-			console.log("found: " + currentDirectory.name + " => " + currentDirectory.relativePath);	
-		}
-		console.log("MATCH: " + currentDirectory.path);
-		console.log(logFile(currentDirectory));
+	// 	for (let index in parents) {
+	// 		let dir = parents[index];
+	// 		console.log("  search " + dir);
+	// 		if (!currentDirectory.children[dir]) {
+	// 			console.log("ERROR FILE NOT FOUND");
+	// 		}
+	// 		currentDirectory = currentDirectory.children[dir];
+	// 		console.log("found: " + currentDirectory.name + " => " + currentDirectory.relativePath);	
+	// 	}
+	// 	console.log("MATCH: " + currentDirectory.path);
+	// 	console.log(logFile(currentDirectory));
 		
-		return currentDirectory;
-	}
+	// 	return currentDirectory;
+	// }
 
-	watcher.onDidChange((e) => {
-		console.log("file changed");
-		console.log(e);
-		let filePath = e.fsPath;
-		let scheme = e.scheme;
+	// watcher.onDidChange((e) => {
+	// 	console.log("file changed");
+	// 	console.log(e);
+	// 	let filePath = e.fsPath;
+	// 	let scheme = e.scheme;
 
-		let changedFile = findFile(filePath);
+	// 	let changedFile = findFile(filePath);
 
 
-		console.log(path.sep);
-		// TODO: update file in map and 
+	// 	console.log(path.sep);
+	// 	// TODO: update file in map and 
 
-		//vscode.window.showInformationMessage("change applied!"); 
-	});
+	// 	//vscode.window.showInformationMessage("change applied!"); 
+	// });
 
-	watcher.onDidCreate((e) => {
-		console.log("file created");
-		console.log(e);
+	// watcher.onDidCreate((e) => {
+	// 	console.log("file created");
+	// 	console.log(e);
 		
-		let filePath = e.fsPath;
-		let parentPath = path.dirname(filePath);
+	// 	let filePath = e.fsPath;
+	// 	let parentPath = path.dirname(filePath);
 
-		let parent = findFile(parentPath);
-		console.log("parent folder: ");
-		console.log(logFile(parent));
+	// 	let parent = findFile(parentPath);
+	// 	console.log("parent folder: ");
+	// 	console.log(logFile(parent));
 
-		// TODO: add new file to parent.
-		addFile(parent, filePath);
+	// 	// TODO: add new file to parent.
+	// 	addFile(parent, filePath);
 
-		//
-		// TODO: add to directory tree
-	});
+	// 	//
+	// 	// TODO: add to directory tree
+	// });
 
-	watcher.onDidDelete((e) => {
-		//console.log("file deleted");
-		//console.log(e);
-		let filePath = e.fsPath;
+	// watcher.onDidDelete((e) => {
+	// 	//console.log("file deleted");
+	// 	//console.log(e);
+	// 	let filePath = e.fsPath;
 		
-		let deletedFile = findFile(filePath);
-		//console.log("Before delete");
-		//console.log(logFile(deletedFile.parent));
+	// 	let deletedFile = findFile(filePath);
+	// 	//console.log("Before delete");
+	// 	//console.log(logFile(deletedFile.parent));
 
-		// OK working fine
-		deleteFile(deletedFile);
-		//console.log("After delete");
-		//console.log(logFile(deletedFile.parent));
-		console.log("Tree updated.");
-	});
+	// 	// OK working fine
+	// 	deleteFile(deletedFile);
+	// 	//console.log("After delete");
+	// 	//console.log(logFile(deletedFile.parent));
+	// 	console.log("Tree updated.");
+	// });
 }
 
 function initRootDirectory() {
 	rootDirectory = {} as File;
-	rootDirectory.path = vscode.workspace.rootPath as string;
+	rootDirectory.path = (extension.currentWorkspaceFolder as WorkspaceFolder).uri.fsPath;
 	rootDirectory.name = path.basename(rootDirectory.path);// "root";
 	console.log("root name: " + rootDirectory.name);
 	rootDirectory.relativePath = rootDirectory.name; //"root";
@@ -188,10 +176,10 @@ function initRootDirectory() {
 	scanDirectory(rootDirectory);
 }
 
-function deleteFile(file: File) {
-	let parent = file.parent;
-	delete(parent.children[file.name]);
-}
+// function deleteFile(file: File) {
+// 	let parent = file.parent;
+// 	delete(parent.children[file.name]);
+// }
 
 function addFile(parent: File, absolutePath: string): File | null {
 	let fileName = path.basename(absolutePath);
@@ -247,26 +235,6 @@ function scanDirectory(directory: File) {
 				if (newFile !== null) {
 					pendingFiles.push(newFile);
 				}
-			/*	let extension = path.extname(file);
-				if (Settings.excludeFileType.indexOf(extension) > -1) {
-					return;
-				}
-				let newFile = {} as File;
-				newFile.path = absolutePath;
-				newFile.isDirectory = false;
-				newFile.relativePath = relativePath;
-				newFile.name = file;
-				newFile.parent = directory;
-				newFile.hash = Md5.hashStr(absolutePath) as string;
-				newFile.extension = extension;
-				newFile.lastModified = fs.statSync(absolutePath).mtime;
-
-				let content = fs.readFileSync(absolutePath).toString();
-				let lineCount = content.split(/\r\n|\r|\n/).length;
-				newFile.content = content;
-				newFile.lines = lineCount;
-				directory.children[newFile.name] = newFile;
-				pendingFiles.push(newFile);*/
 			}
 		});
 	} catch (e) {
@@ -284,52 +252,17 @@ function uploadToServer() {
 
 	console.log("upload file: " + item.path);
 
-	let queryBuilder = new URLQueryBuilder(Settings.getLanguagemodelHostname());
-	queryBuilder.set({
-		
-	});
+	let url = Settings.getLanguagemodelHostname();
 
 	let content = item.content;
-
-	let cachedItemPath = path.join(minimapCachePath, item.hash + ".png");
-	var cachedTimestamp = null;
-	if (fs.existsSync(cachedItemPath)) {
-		cachedTimestamp = fs.statSync(cachedItemPath).mtime;
-	}
-
-	// // Thumbnail for search
-	// if (cachedTimestamp === null || cachedTimestamp < item.lastModified || true) {
-	// 	axios.request({
-	// 		responseType: 'arraybuffer',
-	// 		url: 'http://localhost:8080/thumbnail',
-	// 		method: 'post',
-	// 		data: {
-	// 			content: fs.readFileSync(item.path, 'utf8').toString(),
-	// 			hash: item.hash,
-	// 			// extension: "java",
-	// 			// languageId: "JAVA",
-	// 		}
-	// 	}).then(response => {
-	// 		console.log("Thumbnail created")
-	// 		let path = ctx.asAbsolutePath(`/images/minimap/${item.hash}.png`);
-	// 		fs.writeFileSync(path, response.data);
-	// 	}).catch(error => {
-	// 		console.log("thumbnail error");
-	// 		console.log(error);
-	// 	});
-	// }
 
 	// Risk -> languagemodel
 	if (Settings.supportedFileTypes.indexOf(item.extension) > -1) {
 
 		let timestamp = fs.statSync(item.path).mtimeMs;
 
-		console.log("UPLOAD FILE")
-		console.log(extension.currentWorkspaceFolder);
-
-		axios.post(queryBuilder.get(), { 
+		axios.post(url, { 
 			content: content,
-			extension: item.extension,
 			languageId: item.extension.replace(/\./, ''),
 			filePath: item.path,
 			timestamp: timestamp,

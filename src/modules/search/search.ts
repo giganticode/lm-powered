@@ -2,11 +2,13 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from "fs";
 import { Settings } from '../../settings';
-import URLQueryBuilder from 'url-query-builder';
 import { Context } from 'vm';
 import {Md5} from 'ts-md5/dist/md5';
+import { EntropyResult, EntropyLine } from '../risk/risk';
+import { WorkspaceFolder } from 'vscode-languageclient';
 const axios = require('axios');
 var dataArray: Item[] = [];
+const extension = require('../../extension');
 
 let overviewPanel: vscode.WebviewPanel | undefined = undefined;
 var ctx: Context;
@@ -119,7 +121,7 @@ function getCachedWebViewContent() {
 }
 
 function getWebviewContent() {
-	if (vscode.workspace.rootPath === null) {
+	if (!extension.currentWorkspaceFolder) {
 		return "No workspace root defined";
 	}
 
@@ -139,9 +141,9 @@ function getWebviewContent() {
 	let html = fileContent.replace(/script src="([^"]*)"/g, (match, src) => {
 		const realSource = 'vscode-resource:' + path.resolve(resourcePath, src);
 		return `script src="${realSource}"`;
-	}).replace(/link(.*)href="([^"]*)"/g, (match, other, src) => {
+	}).replace(/link href="(\.\/[^"]*)"/g, (match, src) => {
 		const realSource = 'vscode-resource:' + path.resolve(resourcePath, src);
-		return `link${other} href="${realSource}"`;
+		return `link href="${realSource}"`;
 	});
 
 	return html;
@@ -162,7 +164,7 @@ function initDirectoryMap() {
 	directoryMap = {} as DirectoryMap;
 	let rootItem = {} as Item;
 	rootItem.name = "root";
-	rootItem.path = vscode.workspace.rootPath as string;
+	rootItem.path = (extension.currentWorkspaceFolder as WorkspaceFolder).uri.fsPath;
 	rootItem.relativePath = "root";
 	scanItem(rootItem);
 }
@@ -206,18 +208,42 @@ function scanItem(item: Item) {
 }
 
 function getSearchResultFromWebServie(item: Item, search: string, regex: boolean) {
-	let queryBuilder = new URLQueryBuilder(Settings.getSearchHostname());
+	let url = Settings.getSearchHostname();
+	let matchIndicator = Settings.getSearchMatchIndicator();
+	let searchInterval = Settings.getSearchQueryInterval();
 
 	item.match = [];
-	axios.post(queryBuilder.get(), { 
+	axios.post(url, { 
 		content: item.content,
 		search: search,
-		extension: path.extname(item.path),
 		languageId: path.extname(item.path).substr(1),
+		searchInterval: searchInterval,
 	 	}).then(response => {
 			console.log("got search result");
 			console.log(response.data);
-			item.match = response.data;
+
+			let originalEntropies: EntropyResult = response.data.entropies.original;
+			let searchEntropies: EntropyResult = response.data.entropies.search;
+
+			originalEntropies.lines = originalEntropies.lines.filter((e, i) => i % searchInterval !== 0) as [EntropyLine];
+			searchEntropies.lines = searchEntropies.lines.filter((e, i) => i % searchInterval !== 0) as [EntropyLine];
+
+			let matches:any = {};
+			for (let i = 0; i < originalEntropies.lines.length; i++) {
+				let original = originalEntropies.lines[i].line_entropy;
+				let search = searchEntropies.lines[i].line_entropy;
+
+				let diff: number = original / search;
+				diff = ((diff < 1 ? 1 / diff : diff) - 1) * 100;
+				diff = isNaN(diff) ? 0 : diff;
+
+				if (diff > matchIndicator) {
+					matches[i] = diff;
+				}
+			}
+
+			item.match = matches;
+			console.log(matches)
 		}).catch(error => {
 			console.log("Search error");
 			console.log(error);

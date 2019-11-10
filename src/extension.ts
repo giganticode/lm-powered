@@ -6,29 +6,37 @@ const treemap = require('./modules/treemap/treemap');
 const risk = require('./modules/risk/risk');
 const search = require('./modules/search/search');
 const codecompletion = require('./modules/codecompletion/codecompletion');
+import * as fs from "fs";
+import * as path from 'path';
 import { Settings } from './settings';
 
 export let currentWorkspaceFolder : vscode.WorkspaceFolder | undefined = undefined;
 
 export function activate(context: vscode.ExtensionContext) {
+  currentWorkspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0] : undefined;
+  
   vscode.workspace.onDidChangeConfiguration((event) => {
     if (event.affectsConfiguration('visualization')) {
       // TODO: reload cached values.
+      console.log("Settings changed: recrate svgs")
       Settings.readSettings(context);
     }
   }, null,
     context.subscriptions
   );
 
-  console.log("Activate plugin");
-  console.log(vscode.workspace.workspaceFolders)
+  let minimapCachePath: string = path.resolve(context.extensionPath, 'images', 'minimap');
 
-  currentWorkspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0] : undefined;
-//uri, name, index
+	if (!fs.existsSync(minimapCachePath)){
+		fs.mkdirSync(minimapCachePath);
+	}
+
+	if (!fs.existsSync(path.resolve(context.extensionPath, 'images', 'gutter'))){
+		fs.mkdirSync(path.resolve(context.extensionPath, 'images', 'gutter'));
+	}
+
 
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(event => {
-    console.log("change workspaceFolder");
-    console.log(event);
     currentWorkspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0] : undefined;
   }));
 

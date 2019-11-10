@@ -3,12 +3,14 @@ import * as path from 'path';
 import * as fs from "fs";
 import { Settings } from '../../settings';
 import { Context } from 'vm';
+import { EntropyResult } from '../risk/risk';
+import { WorkspaceFolder } from 'vscode-languageclient';
 const axios = require('axios');
+const extension = require('../../extension');
 
 let overviewPanel: vscode.WebviewPanel | undefined = undefined;
 var documentReady: boolean = false;
 var ctx: Context;
-var remaining: number = 0;
 var directoryMap: DirectoryMap = {};
 var directoryParentMap: DirectoryParentMap = {};
 var cachedWebViewContent: string | null = null;
@@ -101,7 +103,7 @@ function getCachedWebViewContent() {
 }
 
 function getWebviewContent() {
-	if (vscode.workspace.rootPath === null) {
+	if (!extension.currentWorkspaceFolder) {
 		return "No workspace root defined";
 	}
 
@@ -113,6 +115,7 @@ function getWebviewContent() {
 
 	initDirectoryMap();
 
+	// TODO: send ranges to client view
 	var cssColors = "";
 	for (let key in ranges) {
 		let item = ranges[key];
@@ -210,7 +213,7 @@ function initDirectoryMap() {
 	rootItem.riskLevel = Risk.NotCalculated;
 	rootItem.parent = null;
 	rootItem.name = "root";
-	rootItem.path = vscode.workspace.rootPath as string;
+	rootItem.path = (extension.currentWorkspaceFolder as WorkspaceFolder).uri.fsPath;
 	rootItem.relativePath = "root";
 	directoryMap["root"] = rootItem;
 	scanItem(rootItem);
@@ -297,14 +300,19 @@ function getRiskLevelsFromWebService() {
 	item.risk = [];
 	axios.post(url, { 
 			content: item.content,
-			extension: path.extname(item.path),
 			languageId: path.extname(item.path).replace(/\./, ''),
 			filePath: item.path,
 			timestamp: timestamp,
 			noReturn: false,
+			resetContext: false,
+			metrics: Settings.getSelectedMetric(),		
+			tokenType: Settings.getSelectedTokenType(),
+			model: Settings.getSelectedModel(),
+			workspaceFolder: extension.currentWorkspaceFolder
 	 	})
 		.then(response => {
-			item.risk = response.data.map(e => e.aggregated_result.bin_entropy);
+			let entropies: EntropyResult = response.data.entropies;
+			item.risk = entropies.lines.map(e => e.line_entropy);
 		})
 		.catch(error => {
 			if (error.response.status === 406) {
@@ -357,6 +365,10 @@ function setupWebviewListeners(context: Context) {
 						data: data,
 						colorRanges: Settings.getColorRanges(),
 					});
+					break;
+				case "updateColorRanges":
+					let newColorRangesEntropy = message.colorRanges;
+					Settings.setColorRangesEntropy(newColorRangesEntropy);
 					break;
 				case "openFile":
 					let path = message.path;

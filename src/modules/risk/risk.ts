@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { Context } from 'vm';
 import { Settings, ColorRange } from '../../settings';
-import * as path from 'path';
 const fs = require('fs');
 const axios = require('axios');
 const minimap = require('./minimap');
 const worker = require('./worker');
+const extension = require('../../extension');
 
 var ranges: ColorRange[];
 var decorationMap: DecorationMap = {};
@@ -15,29 +15,27 @@ interface DecorationMap {
 	[key: number]: vscode.TextEditorDecorationType;
 }
 
-interface EntropyLine {
-	aggregated_result: AggregatedResult;
-	prep_metadata: PrepMetadata;
-	prep_text: [string];
-	results: EntropyResults;
-	text: string;
-}
-
-interface EntropyResults {
-	bin_entropy: [number];
-}
-
-interface AggregatedResult {
-	bin_entropy: number;
-}
-
-interface PrepMetadata {
-	nonprocessable_tokens: [string];
-	word_boundaries: [number];
-}
-
 interface EntropyCacheMap {
-	[key: string]: [EntropyLine];
+	[key: string]: EntropyResult;
+}
+
+// new structure
+export interface Token {
+	text: string;
+	entropy: number;
+}
+
+export interface EntropyLine {
+	text: string;
+	line_entropy: number;
+	tokens: [Token];
+}
+
+export interface EntropyResult {
+	metrics: string;
+	token_type: string;
+	languagemodel: string;
+	lines: [EntropyLine];
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -72,7 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}, null, context.subscriptions);
 
 	if (Settings.isFoldingEnabled()) {
-		vscode.languages.registerFoldingRangeProvider({ scheme: 'file', language: 'java' }, new ImportFoldingRangeProvider());
+		vscode.languages.registerFoldingRangeProvider({ scheme: 'file', language: 'java' }, new EntropyFoldingRangeProvider());
 	}
 
 	worker.init(context);
@@ -85,18 +83,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.languages.registerHoverProvider('java', {
 		provideHover(document, position, token) {
-			let fileEntropyInfo = entropyCacheMap[document.fileName];
-			let lineEntropyInfo = fileEntropyInfo[position.line];
+			let fileEntropyInfo: EntropyResult = entropyCacheMap[document.fileName];
+			let lineEntropyInfo: EntropyLine = fileEntropyInfo.lines[position.line];
+
 			if (!fileEntropyInfo || !lineEntropyInfo) {
 				return {contents: "No data available"};
 			}
+
 			let remainingText = lineEntropyInfo.text;
 			let targetColumn = position.character;
 			let globalIndex = 0;
 
-			for (let j = 0; j < lineEntropyInfo.prep_text.length; j++) {
-				let text = lineEntropyInfo.prep_text[j].replace('</t>', '');
-				let entropy = lineEntropyInfo.results.bin_entropy[j];
+			for (let j = 0; j < lineEntropyInfo.tokens.length; j++) {
+				let token = lineEntropyInfo.tokens[j];
+				let text = token.text.replace('</t>', '');
+				let entropy = token.entropy;
    
 				// search text in line Text
 				let found = false;
@@ -110,7 +111,7 @@ export function activate(context: vscode.ExtensionContext) {
 						
 						if (targetColumn >= globalIndex + startIndex && targetColumn < globalIndex + endIndex) {
 							return {
-								contents: [`Line entropy: ${lineEntropyInfo.aggregated_result.bin_entropy.toFixed(3)} - Token '${text}' -> ${entropy.toFixed(3)}`]
+								contents: [`Line entropy: ${lineEntropyInfo.line_entropy.toFixed(3)} - Token '${text}' -> ${entropy.toFixed(3)}`]
 							};
 						}
 
@@ -130,7 +131,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 		  return {
-			contents: [`Line entropy: ${lineEntropyInfo.aggregated_result.bin_entropy.toFixed(3)}`]
+			contents: [`Line entropy: ${lineEntropyInfo.line_entropy.toFixed(3)}`]
 		  };
 		}
 	  });
@@ -158,24 +159,28 @@ function format(editor: vscode.TextEditor, document: string, openEvent: boolean)
 
 	axios.post(url, { 
 		content: document,
-		extension: path.extname(filePath),
 		languageId: editor._documentData._languageId,
 		filePath: filePath,
 		timestamp: timestamp,
 		noReturn: false,
-	})
-		.then(response => {
-			console.log("got feedback");
+		resetContext: false,
+		metrics: Settings.getSelectedMetric(),		
+		tokenType: Settings.getSelectedTokenType(),
+		model: Settings.getSelectedModel(),
+		workspaceFolder: extension.currentWorkspaceFolder
+		}).then(response => {
+			console.log("got feedback from LM");
+			console.log(response.data);
+
+			entropyCacheMap[editor._documentData._document.fileName] = response.data.entropies;
+
 			if (Settings.isRiskEnabled()) {
-				decorate(editor, response.data, openEvent);
+				decorate(editor, response.data.entropies, openEvent);
 			}
 			if (Settings.isMinimapEnabled()) {
-				minimap.decorate(editor, response.data);
+				minimap.decorate(editor, response.data.entropies);
 			}
-			console.log("format", editor)
-			entropyCacheMap[editor._documentData._document.fileName] = response.data;
-		})
-		.catch(error => {
+		}).catch(error => {
 			if (error.response.status === 406) {
 				// file not supported
 			} else {
@@ -195,14 +200,12 @@ function getRangeIndexForRisk(riskLevel: number) {
 	return index;
 }
 
-function decorate(editor: vscode.TextEditor, scanResult: any[], openEvent: boolean) {
+function decorate(editor: vscode.TextEditor, scanResult: EntropyResult, openEvent: boolean) {
 	let decorationsMap: { [id: number]: any } = {};
 
-	console.log("scanresult:")
-	console.log(scanResult)
-
-	for (var i = 0; i < scanResult.length; i++) {
-		var riskLevel: number = scanResult[i].aggregated_result.bin_entropy;
+	for (var i = 0; i < scanResult.lines.length; i++) {
+		let line = scanResult.lines[i];
+		var riskLevel: number = line.line_entropy;
 		let decoration = {
 			range: new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, 0))
 		};
@@ -221,7 +224,7 @@ function decorate(editor: vscode.TextEditor, scanResult: any[], openEvent: boole
 		}
 
 		if (Settings.isFoldingOnOpenEnabled() && openEvent) { 
-			let ranges = getFoldingRanges(scanResult);
+			let ranges = getFoldingRanges(scanResult.lines.map(e => e.line_entropy));
 			let positions: number[]  = ranges.map(e => e.start);
 			vscode.commands.executeCommand('editor.fold', {levels: 1, direction: 'down', selectionLines: positions}); //2,6
 			console.log("folded positions...");
@@ -262,9 +265,8 @@ function getFoldingRanges(scanResult: number[]): vscode.FoldingRange[] {
 	return ranges;
 }
 
-class ImportFoldingRangeProvider implements vscode.FoldingRangeProvider {
-	provideFoldingRanges(document: vscode.TextDocument): vscode.FoldingRange[] |Thenable<vscode.FoldingRange[]> {
-
+class EntropyFoldingRangeProvider implements vscode.FoldingRangeProvider {
+	provideFoldingRanges(document: vscode.TextDocument): vscode.FoldingRange[] | Thenable<vscode.FoldingRange[]> {
 		return new Promise<vscode.FoldingRange[]>(async (resolve, reject) => {
 			let url = Settings.getLanguagemodelHostname();
 			let filePath = document.fileName;
@@ -272,23 +274,22 @@ class ImportFoldingRangeProvider implements vscode.FoldingRangeProvider {
 			
 			axios.post(url, {
 					content: document.getText(),
-					extension: path.extname(filePath),
 					languageId: document.languageId,
 					filePath: filePath,
 					timestamp: timestamp,
 					noReturn: false,
+					workspaceFolder: extension.currentWorkspaceFolder
 				})
 				.then((response: any) => {
 					console.log("got feedback for folding range provider");
 					console.log(response.data);
 					let ranges = getFoldingRanges(response.data);
-					console.log(ranges)
 					resolve(ranges);
 				})
 				.catch((error: any) => {
 					if (error.response.status === 406) {
 						// file not supported
-						console.log("Folding: file not supported")
+						console.log("Folding: file not supported");
 					} else {
 						console.log(error);
 					}

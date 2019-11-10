@@ -59,7 +59,7 @@ export class Settings {
   }
 
   static getCodelensHostname(): string {
-    return Settings.configuration.get<string>("codelens.hostname", "http://localhost/webservice/codelens.php");
+    return Settings.configuration.get<string>("codelens.url", "http://localhost/webservice/codelens.php");
   }
 
   static getCodelensNumberOfDays(): number {
@@ -81,7 +81,7 @@ export class Settings {
   }
 
   static getHighlightHostname(): string {
-    return Settings.configuration.get<string>("highlight.hostname", "http://localhost/webservice/highlight.php");
+    return Settings.configuration.get<string>("highlight.url", "http://localhost/webservice/highlight.php");
   }
 
   static getHighlightOKColor(): string {
@@ -94,12 +94,20 @@ export class Settings {
 
   // Search
   static getSearchHostname(): string {
-    return Settings.configuration.get<string>("search.hostname", "http://localhost:8080/search");
+    return Settings.configuration.get<string>("search.url", "http://localhost:8080/api/search");
+  }
+
+  static getSearchMatchIndicator(): number {
+    return Settings.configuration.get<number>("search.matchindicator", 20);
+  }
+
+  static getSearchQueryInterval(): number {
+    return Settings.configuration.get<number>("search.queryinterval", 10);
   }
 
   // Languagemodel (Risk + Treemap)
   static getLanguagemodelHostname(): string {
-    return Settings.configuration.get<string>("languagemodel.hostname", "http://localhost:8080/languagemodel");
+    return Settings.configuration.get<string>("languagemodel.url", "http://localhost:8080/api/languagemodel");
   }
 
   // Risk
@@ -135,7 +143,25 @@ export class Settings {
   }
 
   static getAutoCompletionHostname(): string {
-    return Settings.configuration.get<string>("autocompletion.hostname", "http://localhost:8080/autocompletion");
+    return Settings.configuration.get<string>("autocompletion.url", "http://localhost:8080/api/autocompletion");
+  }
+
+  static getSelectedModel(): string {
+    return Settings.configuration.get<string>("languagemodel.model", "langmodel-small-split_10k_1_512_190906.154943");
+  }
+
+  // constants
+  static getSelectedMetric(): string {
+    return 'full_token_entropy';
+  }
+
+  static getSelectedTokenType(): string {
+    return 'all';
+  }
+
+  // update
+  static setColorRangesEntropy(colorRangesEntropyObj: any) {
+    Settings.configuration.update('general.colorranges', colorRangesEntropyObj);
   }
 
 }

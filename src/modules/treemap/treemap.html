@@ -3,23 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'unsafe-inline' vscode-resource: https:; script-src vscode-resource: https: 'nonce-NONCE'; style-src 'unsafe-inline' vscode-resource: https:">
+    <meta http-equiv="Content-Security-Policy" 
+        content="img-src vscode-resource: data: https:; script-src vscode-resource: 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'unsafe-inline' vscode-resource: https:;" />
     <title>Code Quality</title>  
-    <link href="./nouislider.css" rel="stylesheet" type="text/css">
+
+    <link href="./uikit.min.css" rel="stylesheet" type="text/css">
 
     <style nonce="NONCE">
         #options {
-            padding: 5px;
-            height: 60px;
+            padding: 7px;
             display: flex;
         }
         #type {
             width: 130px;
-            padding: 11px 11px 11px 0;
-        }
-        #slider {
-            width: calc(100% - 140px);
-            margin-top: 10px;
+            margin-right: 15px;
         }
         .select {
             padding-right: 20px;
@@ -41,52 +38,334 @@
             font-size: 16px;
         }
         CSSCOLORS
-        .noUi-horizontal .noUi-handle {
-            width: 24px;
-            margin-right: 6px;
-        }
-        .noUi-handle:before {
-            left: 9px;
-        }
-        .noUi-handle:after {
-            left: 12px;
-        }
+        
         a:hover {
             cursor: pointer;
         }
         svg g:only-of-type {
             cursor: pointer !important;
         }
+
+        .colors .uk-input {
+            width: 73px;
+            height: 30px;
+        }
+
+        .color-picker input {
+            min-width: 190px;
+        }
+        .vc-chrome {
+            position: absolute;
+            top: 35px;
+            right: 0;
+            z-index: 9;
+        }
+        .current-color {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-color: #000;
+            cursor: pointer;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .color-picker {
+            position: relative;
+        } 
+        .uk-button.uk-button-primary {
+            color: #666;
+            background-color: #fff;
+        }
+        .uk-button  span {
+            margin-bottom: 3px;
+        }
     </style>
 
 </head>
 <body>	
-    <div id="options">
-        <div id="type">
-            <select class="select" id="type-select">
-                <option value="Average">Average</option>
-                <option value="Median">Median</option>
-                <option value="Maximum">Maximum</option>
-            </select>
-        </div>
-        <div id="slider"></div>
-    </div>
-    
-    <div id="chart_div" style="width: 100%; height: calc(100vh - 80px);"></div>
 
- <!--   <script nonce="NONCE">
-        var dataArray = DATA;
-        var ranges = RANGES;
-        let colors = COLORS;
-    </script>
-    <script nonce="NONCE" src="JQUERY"></script>
-    <script nonce="NONCE" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script nonce="NONCE" src="NOUISLIDERJS"></script>
-    <script nonce="NONCE" src="TREEMAP"></script> -->
+    <div id="vue-app">
+        <div id="options">
+            <div id="type">
+                <select class="select" v-model="selectedType" @change="typeChanged">
+                    <option value="Average">Average</option>
+                    <option value="Median">Median</option>
+                    <option value="Maximum">Maximum</option>
+                </select>
+            </div>
+            <button class="uk-button uk-button-primary" @click="showModal"><span uk-icon="pencil"></span> Edit colors</button>
+        </div>
+
+        <div id="chart_div" style="width: 100%; height: calc(100vh - 54px);"></div>
+
+        <modal-color-mapping-entropy @saved="saveColorMapping" ref="modal"></modal-color-mapping-entropy>
+    </div>
 
     <script src="./jquery.min.js"></script>
     <script src="https://www.gstatic.com/charts/loader.js"></script>
-    <script src="./nouislider.js"></script>
+    <script src="./uikit.min.js"></script>
+    <script src="./uikit-icons.min.js"></script>
+    <script src="./vue-2.6.10.min.js"></script>
+    <script src="./vue-color.min.js"></script>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+        const previousState = vscode.getState();
+        var colorMappingEntropy = [];
+
+        function calculateColor(risk) {
+            if (risk === -2)
+                return 'LIGHTGREY';
+            
+            if (risk === -1 || risk === 0) 
+                return 'LIGHTYELLOW'
+
+            for (let i = 0; i < colorMappingEntropy.length; i++) {
+                let range = colorMappingEntropy[i];
+                if (risk >= range.Minimum && risk < range.Maximum) {
+                    return range.Color;
+                }
+            }
+            return colorMappingEntropy[colorMappingEntropy.length - 1].Color;
+        }
+
+        var Chrome = VueColor.Chrome;
+
+        Vue.component('chrome-picker', Chrome);
+
+        Vue.component('colorpicker', {
+            template: `
+            <div class="color-picker uk-inline " ref="colorpicker">
+                <span class="uk-form-icon">
+                    <span class="current-color" :style="'background-color: ' + colorValue" @click="togglePicker()"></span>
+                </span>
+                <chrome-picker :value="color" @input="updateFromPicker" v-if="displayPicker" />
+                <input type="text" readonly class="uk-input" v-model="colorValue" @focus="showPicker()" @input="updateFromInput" />
+            </div>`,
+            props: {
+                color: {
+                    default: "#000000",
+                    type: String
+                },
+            },
+            watch: {
+                colorValue(val) {
+                    if (val) {
+                        this.updateColors(val);
+                        this.$emit('input', val);
+                    }
+                },
+                color: function(newVal, oldVal) { // watch prop color set from outside when color mapping is reset
+                    this.setColor(newVal);
+                },
+            },
+            data() {
+                return {
+                    colorValue: '',
+                    displayPicker: false,
+                }
+            },
+            mounted() {
+                this.setColor(this.color || '#000000');
+            },
+            methods: {
+                setColor(color) {
+                    this.updateColors(color);
+                    this.colorValue = color;
+                },
+                updateColors(color) {
+                    if(color.slice(0, 1) == '#') {
+                        this.colors = {
+                            hex: color
+                        };
+                    }
+                    else if(color.slice(0, 4) == 'rgba') {
+                        var rgba = color.replace(/^rgba?\(|\s+|\)$/g,'').split(','),
+                            hex = '#' + ((1 << 24) + (parseInt(rgba[0]) << 16) + (parseInt(rgba[1]) << 8) + parseInt(rgba[2])).toString(16).slice(1);
+                        this.colors = {
+                            hex: hex,
+                            a: rgba[3],
+                        }
+                    }
+                },
+                showPicker() {
+                    document.addEventListener('click', this.documentClick);
+                    this.displayPicker = true;
+                },
+                hidePicker() {
+                    document.removeEventListener('click', this.documentClick);
+                    this.displayPicker = false;
+                },
+                togglePicker() {
+                    this.displayPicker ? this.hidePicker() : this.showPicker();
+                },
+                updateFromInput() {
+                    this.updateColors(this.colorValue);
+                },
+                updateFromPicker(color) {
+                    this.colors = color;
+                    if(color.rgba.a == 1) {
+                        this.colorValue = color.hex;
+                    }
+                    else {
+                        this.colorValue = 'rgba(' + color.rgba.r + ', ' + color.rgba.g + ', ' + color.rgba.b + ', ' + color.rgba.a + ')';
+                    }
+                },
+                documentClick(e) {
+                    var el = this.$refs.colorpicker, target = e.target;
+                    if(!el || (el !== target && !el.contains(target))) {
+                        this.hidePicker()
+                    }
+                }
+            },
+
+        });
+
+        Vue.component('modal-color-mapping-entropy', {
+            data() {
+                return {
+                    modal: null,
+                    colors: [],
+                    defaultColorMappingEntropy: [
+                        {'Minimum': 0, 'Maximum': 2, 'Color': 'green'}, 
+                        {'Minimum': 2, 'Maximum': 4, 'Color': 'rgb(126, 128, 0)'}, 
+                        {'Minimum': 4, 'Maximum': 8, 'Color': 'orange'}, 
+                        {'Minimum': 8, 'Maximum': 16, 'Color': 'rgb(255, 72, 0)'}, 
+                        {'Minimum': 16, 'Maximum': 25, 'Color': 'red'}
+                    ],
+                }
+            },
+            template: `
+            <div ref="modal" uk-modal="esc-close:true;bg-close:false;stack:true">
+                <div class="uk-modal-dialog uk-modal-body">
+                    <h2 class="uk-modal-title">Color mapping for entroy values</h2>
+                    <div class="colors">
+                    <div v-for="(color, key) in colors" :key="key" class="uk-margin-small">
+                        <label>
+                        Min <input type="number" class="uk-input" v-model.number="color.Minimum"/>
+                        </label>
+                        <label>
+                        Max <input type="number" class="uk-input" v-model.number="color.Maximum"/>
+                        </label>
+                        <label>
+                        <colorpicker :color="color.Color" v-model="color.Color" ></colorpicker>
+                        </label>
+                        <a class="uk-button uk-button-text" @click="deleteItem(key)" :uk-icon="'trash'"></a>
+                    </div>
+                    <div>
+                        <a class="uk-button uk-button-default" @click="addItem()" :uk-icon="'plus'"></a>
+                    </div>
+                    </div>
+                    <p class="uk-text-right">
+                    <button class="uk-button uk-button-default" @click="close" type="button">Cancel</button>
+                    <button class="uk-button uk-button-default" @click="reset" type="button">Reset</button>
+                    <button class="uk-button uk-button-primary" @click="select" type="button">Save</button>
+                    </p>
+                </div>
+            </div>`,
+            name: 'ModalColorMappingEntropy',
+            methods: {
+                beforeDestroy() {
+                    if (this.modal !== null)
+                    this.modal.$destroy(true);
+                },  
+                show() {
+                this.colors = [];
+                if (this.modal === null)
+                    this.modal = UIkit.modal(this.$refs.modal);
+
+                // clone colors
+                this.colors = JSON.parse(JSON.stringify(colorMappingEntropy));
+                this.modal.show();
+                },
+                close() {
+                this.modal.hide();
+                this.colors = [];
+                },
+                reset() {
+                let defaultColors = JSON.parse(JSON.stringify(this.defaultColorMappingEntropy));
+                this.colors = defaultColors;
+                },
+                select() {
+                // check ranges for validity
+                let errors = [];
+                if (this.colors.length === 0) {
+                    errors.push('No colors')
+                }
+                else {
+                    let lastMax = 0;
+                    for (let i = 0; i < this.colors.length; i++) {
+                    let color = this.colors[i];
+                    if (color.Minimum > color.Maximum) {
+                        errors.push(`The minimum value of the range is smaller than the maximum value (range #${i+1})`);
+                    }
+                    if (color.Minimum !== lastMax) {
+                        errors.push(`The minimum value of the range must be equal to the maximum value of the previous range (range #${i+1}) => minimum value should be '${lastMax}'`);
+                    }
+                    lastMax = color.Maximum;
+                    }
+                }
+
+                if (errors.length > 0) {
+                    for (let key in errors) {
+                    UIkit.notification({
+                        message: errors[key],
+                        status: 'danger',
+                        pos: 'bottom-right',
+                        timeout: 4000
+                    });
+                    }
+                    return;
+                }
+
+                // this.$store.commit('colorMappingEntropy', this.colors);
+                this.$emit('saved', this.colors);
+                this.modal.hide();
+                this.colors = [];
+                },
+                deleteItem(key) {
+                this.colors.splice(key, 1);
+                },
+                addItem() {
+                let lastMax = 0;
+                if (this.colors.length > 0) {
+                    lastMax = this.colors[this.colors.length - 1].Maximum;
+                }
+                this.colors.push({Minimum: lastMax, Maximum: lastMax + 2, Color: '#09921C'});
+                }
+            }
+        });
+            
+        new Vue({
+            el: '#vue-app',
+            data: {
+                selectedType: 'Average'
+             },
+            methods: {
+                showModal() {
+                    this.$refs.modal.show();
+                },
+                saveColorMapping(colors) {
+                    colorMappingEntropy = colors;
+                    vscode.postMessage({
+                        command: 'updateColorRanges',
+                        colorRanges: colors
+                    });
+                    drawVisualization();
+                },
+                typeChanged() {
+                    vscode.postMessage({
+                        command: 'typeChanged',
+                        value: this.selectedType,
+                    })
+                }
+            }
+        });
+
+    </script>    
+
     <script src="./treemap.js"></script>
 
 </body>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" 
-        content="img-src vscode-resource: data: https:; script-src vscode-resource:; style-src 'unsafe-inline' vscode-resource:;" />
+        content="img-src vscode-resource: data: https:; script-src vscode-resource: 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'unsafe-inline' vscode-resource:;" />
     <title>Search</title>
 
     <style>
@@ -113,10 +113,12 @@
             transition: .2s ease-in-out;
             transition-property: color, background-color, border;            
         }
+       
     </style>
 </head>
 
 <body>
+
     <div id="search">
         <input placeholder="Search..." type="search" id="input-search" autofocus />
         <button id="btn-search">Search</button>
