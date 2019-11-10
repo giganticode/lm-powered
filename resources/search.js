@@ -1,4 +1,7 @@
 ; (function () {
+
+
+
     const vscode = acquireVsCodeApi();
     var dataArray = [];
     var cachePath = "";

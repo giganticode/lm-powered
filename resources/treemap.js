@@ -1,52 +1,4 @@
-const vscode = acquireVsCodeApi();
-const previousState = vscode.getState();
-var dataArray;
-// var ranges;
-// var colors;
-var colorRanges;
-
-// Range slider
-function initSlider() {
-    var slider = document.getElementById('slider');
-
-    noUiSlider.create(slider, {
-        range: {
-            'min': 0,
-            'max': 14
-        },
-        step: 0.1,
-        start: colorRanges.slice(0, -1).map(e => e.Maximum), // 20, 40, 60, 80
-        connect: [true, true, true, true, true],
-        format: {
-            to: function (value) {
-                return value;
-            },
-            from: function (value) {
-                return value;
-            }
-        },
-        pips: {
-            mode: 'count',
-            values: 15,
-            density: 4
-            // mode: 'range',
-            // values: [0].concat(ranges), // 0, 20, 40, 60, 80, 100
-            // values: [0, 2, 4, 6, 8, 10 , 12, 14], // 0, 20, 40, 60, 80, 100
-            // density: 3,
-            // stepped: true
-        }
-    });
-    
-    slider.noUiSlider.on('change', function(values, handle) {
-        console.log("changes UI slider")
-        console.log(colorRanges)
-        console.log(values)
-        console.log(handle)
-        colorRanges[handle].Maximum = values[handle];
-        colorRanges[handle + 1].Minimum = values[handle];
-        drawVisualization();
-    });
-}
+var dataArray = [];
 
 $('document').ready(function() {
     vscode.postMessage({
@@ -61,14 +13,13 @@ window.addEventListener('message', event => {
     switch (message.command) {
         case 'init':
             dataArray = message.data;
-            colorRanges = message.colorRanges;
-            // ranges = message.ranges;
-            // colors = message.colors;
+            colorMappingEntropy = message.colorRanges;
             console.log("got init message")
             console.log(message);
-            initSlider();
             break;
         case 'updateData':
+            console.log("got update message")
+            console.log(message);
             let data = message.data;
 
             for (let i in data) {
@@ -125,23 +76,6 @@ function drawVisualization() {
         });
     }
 
-    function calculateColor(risk) {
-        if (risk === -2)
-            return 'LIGHTGREY';
-        
-        if (risk === -1 || risk === 0) 
-            return 'LIGHTYELLOW'
-
-        var index = 0;
-        for (var i = 0; i < colorRanges.length; i++) {
-            if (risk > colorRanges[i].Minimum && risk <= colorRanges[i].Maximum) {
-                index = i;
-                break;
-            }
-        }
-        return colorRanges[index].Color;
-    }
-
     google.visualization.events.addListener(treemap, 'select', showFile);
     google.visualization.events.trigger(treemap, 'select', null);
 
@@ -168,8 +102,7 @@ function drawVisualization() {
 
         let svgSubItems = $('body').find('svg').find('g').length;
         previousSelect = svgSubItems;
-        console.log(svgSubItems);
-
+        // console.log(svgSubItems);
     }
 
     treemap.draw(view, {
@@ -187,9 +120,9 @@ function drawVisualization() {
         } else if (riskLevel && riskLevel >= 0) {
             riskFormatted = riskLevel.toFixed(2);
         }
-        console.log("Show statistics");
-        console.log(data.getValue(row, 0));
-        console.log(dataArray[row+1]);
+        // console.log("Show statistics");
+        // console.log(data.getValue(row, 0));
+        // console.log(dataArray[row+1]);
         return '<div style="background:white; color: black; padding:10px; border-style:solid">'+
             '<b>' + dataArray[row + 1][0].v + '</b><br>'+
             'Entropy-level: ' + riskFormatted + '<br> Lines: ' + size +
@@ -199,22 +132,13 @@ function drawVisualization() {
 }
 
 $('body').on('click', 'a', function() {
-    console.log("A clicked: " + $(this).attr('data-path'));
+    // console.log("A clicked: " + $(this).attr('data-path'));
     vscode.postMessage({
         command: 'openFile',
         path: $(this).attr('data-path')
     })
 })
 
-
 window.onresize = function(event) {
     drawVisualization();
-};
-
-document.getElementById("type-select").onchange = function(e) {
-    let value = e.target.value;
-    vscode.postMessage({
-        command: 'typeChanged',
-        value: value,
-    })
 };
