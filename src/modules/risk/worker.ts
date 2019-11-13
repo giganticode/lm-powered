@@ -5,12 +5,9 @@ import * as path from 'path';
 import { Context } from 'vm';
 const axios = require('axios');
 import { Md5 } from 'ts-md5/dist/md5';
-import { WorkspaceFolder } from 'vscode-languageclient';
 const extension = require('../../extension');
 
-var pending: Item[] = [];
 let busyIndicator = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
-var ctx: Context;
 
 var rootDirectory: File;
 var pendingFiles: File[] = [];
@@ -45,11 +42,8 @@ interface FileMap {
 	[key: string]: File;
 }
 
-export function init(context: Context) {
-	ctx = context;
-
+export function init() {
 	if (Settings.isRiskEnabled()) {
-		//doJob();
 		initFileWatcher();
 	}
 }
@@ -57,129 +51,26 @@ export function init(context: Context) {
 function initFileWatcher() {
 	busyIndicator.text = "Scanning working directory...";
 	busyIndicator.show();
-	initRootDirectory();
-	console.log("root directory inited");
-	console.log(rootDirectory);
-
-	busyIndicator.text = "Upload files to webserver...";
-	uploadToServer();
-
-	// let watcher = vscode.workspace.createFileSystemWatcher(
-	// 	new vscode.RelativePattern(
-	// 		workspaceRoot,
-	// 		'**/*'
-	// 	),
-	// 	false,
-	// 	false,
-	// 	false
-	// );
-
-	// function logFile(file: File) {
-	// 	let children = [];
-	// 	for(let index in file.children) {
-	// 		children.push(index);
-	// 	}
-	// 	let v = {
-	// 	path: file.path,
-	// 	relativePath: file.relativePath,
-	// 	name: file.name,
-	// 	extension: file.extension,
-	// 	hash: file.hash,
-	// 	isDirectory: file.isDirectory,
-	// 	lastModified: file.lastModified,
-	// 	children: children
-	// 	};
-	// 	return v;		
-	// }
-
-	// function findFile(absolutePath: string): File {
-	// 	let relativePath = absolutePath.substr(rootDirectory.path.length + 1);
-	// 	console.log("Find item for: "+relativePath);
-
-	// 	let parents = relativePath.split(path.sep);
-	// 	let currentDirectory = rootDirectory;
-
-	// 	for (let index in parents) {
-	// 		let dir = parents[index];
-	// 		console.log("  search " + dir);
-	// 		if (!currentDirectory.children[dir]) {
-	// 			console.log("ERROR FILE NOT FOUND");
-	// 		}
-	// 		currentDirectory = currentDirectory.children[dir];
-	// 		console.log("found: " + currentDirectory.name + " => " + currentDirectory.relativePath);	
-	// 	}
-	// 	console.log("MATCH: " + currentDirectory.path);
-	// 	console.log(logFile(currentDirectory));
-		
-	// 	return currentDirectory;
-	// }
-
-	// watcher.onDidChange((e) => {
-	// 	console.log("file changed");
-	// 	console.log(e);
-	// 	let filePath = e.fsPath;
-	// 	let scheme = e.scheme;
-
-	// 	let changedFile = findFile(filePath);
-
-
-	// 	console.log(path.sep);
-	// 	// TODO: update file in map and 
-
-	// 	//vscode.window.showInformationMessage("change applied!"); 
-	// });
-
-	// watcher.onDidCreate((e) => {
-	// 	console.log("file created");
-	// 	console.log(e);
-		
-	// 	let filePath = e.fsPath;
-	// 	let parentPath = path.dirname(filePath);
-
-	// 	let parent = findFile(parentPath);
-	// 	console.log("parent folder: ");
-	// 	console.log(logFile(parent));
-
-	// 	// TODO: add new file to parent.
-	// 	addFile(parent, filePath);
-
-	// 	//
-	// 	// TODO: add to directory tree
-	// });
-
-	// watcher.onDidDelete((e) => {
-	// 	//console.log("file deleted");
-	// 	//console.log(e);
-	// 	let filePath = e.fsPath;
-		
-	// 	let deletedFile = findFile(filePath);
-	// 	//console.log("Before delete");
-	// 	//console.log(logFile(deletedFile.parent));
-
-	// 	// OK working fine
-	// 	deleteFile(deletedFile);
-	// 	//console.log("After delete");
-	// 	//console.log(logFile(deletedFile.parent));
-	// 	console.log("Tree updated.");
-	// });
+	if (extension.currentWorkspaceFolder) {
+		initRootDirectory();
+	
+		busyIndicator.text = "Upload files to webserver...";
+		uploadToServer();
+	} else {
+		busyIndicator.text = "No workspace selected";
+	}
 }
 
 function initRootDirectory() {
 	rootDirectory = {} as File;
-	rootDirectory.path = (extension.currentWorkspaceFolder as WorkspaceFolder).uri.fsPath;
-	rootDirectory.name = path.basename(rootDirectory.path);// "root";
-	console.log("root name: " + rootDirectory.name);
-	rootDirectory.relativePath = rootDirectory.name; //"root";
+	rootDirectory.path = (extension.currentWorkspaceFolder as vscode.WorkspaceFolder).uri.fsPath;
+	rootDirectory.name = path.basename(rootDirectory.path);
+	rootDirectory.relativePath = rootDirectory.name;
 	rootDirectory.isDirectory = true;
 	rootDirectory.hash = Md5.hashStr(rootDirectory.path) as string;
 	rootDirectory.children = {} as FileMap;
 	scanDirectory(rootDirectory);
 }
-
-// function deleteFile(file: File) {
-// 	let parent = file.parent;
-// 	delete(parent.children[file.name]);
-// }
 
 function addFile(parent: File, absolutePath: string): File | null {
 	let fileName = path.basename(absolutePath);
@@ -250,8 +141,6 @@ function uploadToServer() {
 	busyIndicator.text = `Uploading files: ${pendingFiles.length} files remaining`;
 	let item: File = pendingFiles.pop() as File;
 
-	console.log("upload file: " + item.path);
-
 	let url = Settings.getLanguagemodelHostname();
 
 	let content = item.content;
@@ -269,11 +158,11 @@ function uploadToServer() {
 			noReturn: true,
 			workspaceFolder: extension.currentWorkspaceFolder
 		 })
-			.then(response => {
+			.then((response: any) => {
 				//	console.log("request handled for: " + item.path);
 				//	console.log(response.data);
 			})
-			.catch(error => {
+			.catch((error: any) => {
 				if (error.response.status === 406) {
 					//	console.log("file not supported " + item.path);
 				} else {

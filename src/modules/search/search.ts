@@ -4,8 +4,7 @@ import * as fs from "fs";
 import { Settings } from '../../settings';
 import { Context } from 'vm';
 import {Md5} from 'ts-md5/dist/md5';
-import { EntropyResult, EntropyLine } from '../risk/risk';
-import { WorkspaceFolder } from 'vscode-languageclient';
+import {Token, EntropyLine, EntropyResult} from '../../baseDefinitions';
 const axios = require('axios');
 var dataArray: Item[] = [];
 const extension = require('../../extension');
@@ -66,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}, null, context.subscriptions
 			);
 
-			setupMessageListener(context);
+			setupMessageListener(overviewPanel, context);
 
 			// Reset when the current panel is closed
 			overviewPanel.onDidDispose(() => {
@@ -164,7 +163,7 @@ function initDirectoryMap() {
 	directoryMap = {} as DirectoryMap;
 	let rootItem = {} as Item;
 	rootItem.name = "root";
-	rootItem.path = (extension.currentWorkspaceFolder as WorkspaceFolder).uri.fsPath;
+	rootItem.path = (extension.currentWorkspaceFolder as vscode.WorkspaceFolder).uri.fsPath;
 	rootItem.relativePath = "root";
 	scanItem(rootItem);
 }
@@ -218,7 +217,7 @@ function getSearchResultFromWebServie(item: Item, search: string, regex: boolean
 		search: search,
 		languageId: path.extname(item.path).substr(1),
 		searchInterval: searchInterval,
-	 	}).then(response => {
+	 	}).then((response: any) => {
 			console.log("got search result");
 			console.log(response.data);
 
@@ -244,16 +243,18 @@ function getSearchResultFromWebServie(item: Item, search: string, regex: boolean
 
 			item.match = matches;
 			console.log(matches)
-		}).catch(error => {
+		}).catch((error: any) => {
 			console.log("Search error");
 			console.log(error);
 			item.match = {};
 		}).finally(function () {
 			let index = Object.keys(directoryMap).indexOf(item.relativePath);
-			overviewPanel.webview.postMessage({ command: 'searchResults', data: {index: index, match: item.match} });
+			if (overviewPanel) {
+				overviewPanel.webview.postMessage({ command: 'searchResults', data: {index: index, match: item.match} });
+			}
 		});
 }
-function setupMessageListener(context: Context) {
+function setupMessageListener(overviewPanel: vscode.WebviewPanel, context: Context) {
 	overviewPanel.webview.onDidReceiveMessage(
 		message => {
 			switch (message.command) {
@@ -269,20 +270,20 @@ function setupMessageListener(context: Context) {
 					let filePath = message.path;
 					var openPath = vscode.Uri.file(filePath); //A request file path
 					vscode.workspace.openTextDocument(openPath).then(doc => {
-						vscode.window.showTextDocument(doc).then(function () {
+						vscode.window.showTextDocument(doc).then((textEditor: vscode.TextEditor) => {
 							if (message.line !== null) {
 								let moveToLine = parseInt(message.line);
-								let documentLineCount = vscode.window.activeTextEditor.document.lineCount;
+								let documentLineCount = textEditor.document.lineCount;
 								if (moveToLine > documentLineCount - 1) {
 									moveToLine = documentLineCount - 1;
 								}
 								if (moveToLine < 0) {
 									moveToLine = 0;
 								}
-								let moveToCharactor = vscode.window.activeTextEditor.document.lineAt(moveToLine).firstNonWhitespaceCharacterIndex;
+								let moveToCharactor = textEditor.document.lineAt(moveToLine).firstNonWhitespaceCharacterIndex;
 								let newPosition = new vscode.Position(moveToLine, moveToCharactor);
-								vscode.window.activeTextEditor.selection = new vscode.Selection(newPosition, newPosition);
-								vscode.window.activeTextEditor.revealRange(vscode.window.activeTextEditor.selection, vscode.TextEditorRevealType.InCenter);
+								textEditor.selection = new vscode.Selection(newPosition, newPosition);
+								textEditor.revealRange(textEditor.selection, vscode.TextEditorRevealType.InCenter);
 							}
 						});
 

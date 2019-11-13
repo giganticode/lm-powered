@@ -8,7 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let contextLineCount = 10;
 
 	const languagemodelCompletionProvider = vscode.languages.registerCompletionItemProvider(
-		'java',
+		{ scheme: 'file', language: 'java' },
 		{
 			provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
 

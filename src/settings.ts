@@ -49,49 +49,6 @@ export class Settings {
     ]);
   }
 
-  // Codelens
-  static isCodelensEnabled(): boolean {
-    return Settings.configuration.get<boolean>("codelens.enabled", false);
-  }
-
-  static isSparklineEnabled(): boolean {
-    return Settings.configuration.get<boolean>("codelens.sparkline.enabled", true);
-  }
-
-  static getCodelensHostname(): string {
-    return Settings.configuration.get<string>("codelens.url", "http://localhost/webservice/codelens.php");
-  }
-
-  static getCodelensNumberOfDays(): number {
-    return Settings.configuration.get<number>("codelens.number_of_days", 30);
-  }
-
-  static getCodelensNumberOfBars(): number {
-    if (!this.isSparklineEnabled()) {
-      return 0;
-    }
-    let numberOfBars = Settings.configuration.get<number>("codelens.sparkline.number_of_bars", 15);
-    let numberOfDays = this.getCodelensNumberOfDays();
-    return Math.min(numberOfBars, numberOfDays);
-  }
-
-  // Highlight
-  static isHighlightEnabled(): boolean {
-    return Settings.configuration.get<boolean>("highlight.enabled", false);
-  }
-
-  static getHighlightHostname(): string {
-    return Settings.configuration.get<string>("highlight.url", "http://localhost/webservice/highlight.php");
-  }
-
-  static getHighlightOKColor(): string {
-    return Settings.configuration.get<string>("highlight.ok_color", "rgba(0,255,0,0.2)");
-  }
-
-  static getHighlightWarningColor(): string {
-    return Settings.configuration.get<string>("highlight.warning_color", "rgba(255,0,0,0.2)");
-  }
-
   // Search
   static getSearchHostname(): string {
     return Settings.configuration.get<string>("search.url", "http://localhost:8080/api/search");

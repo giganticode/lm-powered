@@ -118,6 +118,11 @@
 						"Random - dev_10k_1_10_190923.132328"
 					]
 				},
+				"visualization.debugmode.enabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable debug mode - visualize token entropies"
+				},
 				"visualization.languagemodel.url": {
 					"type": "string",
 					"default": "http://localhost:8080/api/languagemodel",
@@ -147,66 +152,29 @@
 					"type": "number",
 					"default": 10,
 					"description": "Interval: after each n-th line a search-quer-comment is inserted"
-				},
-				"visualization.highlight.enabled": {
-					"type": "boolean",
-					"default": false,
-					"description": "Highlight enabled"
-				},
-				"visualization.highlight.url": {
-					"type": "string",
-					"default": "http://localhost/webservice/highlight.php",
-					"description": "Determines the hostname of the webservice"
-				},
-				"visualization.highlight.ok_color": {
-					"type": "string",
-					"default": "rgba(0,255,0,0.2)",
-					"description": "Determines the ok color"
-				},
-				"visualization.highlight.warning_color": {
-					"type": "string",
-					"default": "rgba(255,0,0,0.2)",
-					"description": "Determines the warning color"
-				},
-				"visualization.codelens.enabled": {
-					"type": "boolean",
-					"default": false,
-					"description": "Codelens enabled"
-				},
-				"visualization.codelens.url": {
-					"type": "string",
-					"default": "http://localhost/webservice/codelens.php",
-					"description": "Determines the hostname of the webservice"
-				},
-				"visualization.codelens.number_of_days": {
-					"type": "integer",
-					"minimum": 1,
-					"default": 30,
-					"description": "Limit the code call history up to the specified number of days"
-				},
-				"visualization.codelens.sparkline.enabled": {
-					"type": "boolean",
-					"default": true,
-					"description": "Sparkline enabled"
-				},
-				"visualization.codelens.sparkline.number_of_bars": {
-					"type": "number",
-					"minimum": 1,
-					"default": 15,
-					"description": "Determines the number of bars. Must be smaller than code_call_lens.number_of_days."
 				}
 			}
 		},
 		"commands": [
 			{
 				"command": "ide_visualization.showOverview",
-				"title": "Show a report of your code quality represented by a treemap",
-				"category": "Show overview"
+				"title": "Treemap overview - Show a report of your code quality",
+				"category": "Languagemodel"
 			},
 			{
 				"command": "ide_visualization.showSearch",
-				"title": "Send contextual search queries to the languagemodel",
-				"category": "Contextual search"
+				"title": "Contetual search - Send contextual search queries to the languagemodel",
+				"category": "Languagemodel"
+			},
+			{
+				"command": "ide_visualization.showDebug",
+				"title": "Enable debug mode (visualize token entropies)",
+				"category": "Languagemodel"
+			},
+			{
+				"command": "ide_visualization.clearDebug",
+				"title": "Disable debug mode (hide token entropies)",
+				"category": "Languagemodel"
 			}
 		],
 		"keybindings": [

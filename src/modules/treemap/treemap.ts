@@ -3,8 +3,7 @@ import * as path from 'path';
 import * as fs from "fs";
 import { Settings } from '../../settings';
 import { Context } from 'vm';
-import { EntropyResult } from '../risk/risk';
-import { WorkspaceFolder } from 'vscode-languageclient';
+import {Token, EntropyLine, EntropyResult} from '../../baseDefinitions';
 const axios = require('axios');
 const extension = require('../../extension');
 
@@ -79,7 +78,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}, null, context.subscriptions
 			);
 
-			setupWebviewListeners(context);
+			setupWebviewListeners(overviewPanel, context);
 
 			// Reset when the current panel is closed
 			overviewPanel.onDidDispose(() => {
@@ -213,7 +212,7 @@ function initDirectoryMap() {
 	rootItem.riskLevel = Risk.NotCalculated;
 	rootItem.parent = null;
 	rootItem.name = "root";
-	rootItem.path = (extension.currentWorkspaceFolder as WorkspaceFolder).uri.fsPath;
+	rootItem.path = (extension.currentWorkspaceFolder as vscode.WorkspaceFolder).uri.fsPath;
 	rootItem.relativePath = "root";
 	directoryMap["root"] = rootItem;
 	scanItem(rootItem);
@@ -310,11 +309,11 @@ function getRiskLevelsFromWebService() {
 			model: Settings.getSelectedModel(),
 			workspaceFolder: extension.currentWorkspaceFolder
 	 	})
-		.then(response => {
+		.then((response: any) => {
 			let entropies: EntropyResult = response.data.entropies;
 			item.risk = entropies.lines.map(e => e.line_entropy);
 		})
-		.catch(error => {
+		.catch((error: any) => {
 			if (error.response.status === 406) {
 				item.riskLevel = Risk.NotSupported;
 			} else {
@@ -336,8 +335,9 @@ function sendDataToDocument() {
 			let item = directoryMap[key];
 			data.push({ index: index++, riskLevel: item.riskLevel });
 		}
-
-		overviewPanel.webview.postMessage({ command: 'updateData', data: data });
+		if (overviewPanel) {
+			overviewPanel.webview.postMessage({ command: 'updateData', data: data });
+		}
 	} else {
 		setTimeout(function () {
 			sendDataToDocument();
@@ -345,7 +345,7 @@ function sendDataToDocument() {
 	}
 }
 
-function setupWebviewListeners(context: Context) {
+function setupWebviewListeners(overviewPanel: vscode.WebviewPanel, context: Context) {
 	overviewPanel.webview.onDidReceiveMessage(
 		message => {
 			switch (message.command) {

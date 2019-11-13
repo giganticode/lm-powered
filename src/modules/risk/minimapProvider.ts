@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import {Settings, ColorRange} from '../../settings';
-import {EntropyResult} from './risk';
+import {Token, EntropyLine, EntropyResult} from '../../baseDefinitions';
+import GlobalCache from './globalCache';
+import { Settings, ColorRange } from '../../settings';
 
 var ranges: ColorRange[];
 var decorationMap: DecorationMap = {};
@@ -9,7 +10,8 @@ interface DecorationMap {
     [key: number]: vscode.TextEditorDecorationType;
 }
 
-export function decorate(editor: vscode.TextEditor, scanResult: EntropyResult)  {
+export function visualize(editor: vscode.TextEditor, fileName: string) {
+	let scanResult: EntropyResult = GlobalCache.get(fileName);
     let minRiskLevel = Settings.getMinimapMinRisk();
     let decorationsMap: {[key: number] : any} = {};
 
@@ -26,11 +28,10 @@ export function decorate(editor: vscode.TextEditor, scanResult: EntropyResult)  
         decorationsMap[rangeIndex].push(range);
 	}
 
-	if (editor) {
-		for(let key in decorationsMap) {
-			editor.setDecorations(decorationMap[key], decorationsMap[key]);
-		}
-	}
+    for(let key in decorationsMap) {
+        editor.setDecorations(decorationMap[key], decorationsMap[key]);
+    }
+
 }
 
 export function init() {
