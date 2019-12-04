@@ -5,12 +5,7 @@ import GlobalCache from './globalCache';
 import { Settings, ColorRange } from '../../settings';
 
 var decorationMap: DecorationMap = {};
-var showTokenEntroopyMap: ShowTokenEntroopyMap = {}
 var ranges: ColorRange[];
-
-interface ShowTokenEntroopyMap {
-	[key: string]: boolean;
-}
 
 interface DecorationMap {
 	[key: number]: vscode.TextEditorDecorationType;
@@ -37,15 +32,7 @@ export function visualize(editor: vscode.TextEditor, fileName: string) {
     for (let key in decorationsMap) {
         let decorationStyle = decorationMap[parseInt(key)];
         editor.setDecorations(decorationStyle, decorationsMap[key]);
-    }
-
-    // if (Settings.isFoldingOnOpenEnabled() && openEvent) { 
-    //     let ranges = getFoldingRanges(scanResult.lines.map(e => e.line_entropy));
-    //     let positions: number[]  = ranges.map(e => e.start);
-    //     vscode.commands.executeCommand('editor.fold', {levels: 1, direction: 'down', selectionLines: positions}); //2,6
-    //     console.log("folded positions...");
-    //     console.log(positions);
-    // }
+	}
 
 }
 

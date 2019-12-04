@@ -12,6 +12,10 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
 
+				if (!Settings.isAutoCompletionEnabled()) {
+					return null;
+				}
+
 				let fromLine = Math.max(0, position.line - contextLineCount);
 				let content: string = "";
 
@@ -32,8 +36,6 @@ export function activate(context: vscode.ExtensionContext) {
 						model: Settings.getSelectedModel(),
 					}).then((response: any) => {
 						// response is an array of proposals
-						// console.log("GOT PREDICTION RESPONSE"); console.log(response.data)
-
 						let metadata = response.data.metadata;
 						let predictions = response.data.predictions;
 
