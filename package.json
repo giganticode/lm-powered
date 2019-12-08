@@ -168,7 +168,7 @@
 			},
 			{
 				"command": "lmpowered.showSearch",
-				"title": "Contetual search - Send contextual search queries to the languagemodel",
+				"title": "Contextual search - Send contextual search queries to the languagemodel",
 				"category": "Languagemodel"
 			},
 			{

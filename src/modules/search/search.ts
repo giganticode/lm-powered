@@ -76,6 +76,14 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
+	vscode.workspace.onDidChangeConfiguration((event) => {
+		if (event.affectsConfiguration('lmpowered')) {
+			cachedWebViewContent = null;
+		}
+	  }, null,
+		context.subscriptions
+	  );
+
 	context.subscriptions.push(showOverview);
 }
 
