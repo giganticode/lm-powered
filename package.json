@@ -1,6 +1,6 @@
 {
-	"name": "visualizationtool",
-	"displayName": "IDE Visualization",
+	"name": "lmpowered",
+	"displayName": "LM-Powered: bringing neural language models to your IDE",
 	"description": "",
 	"version": "0.0.1",
 	"publisher": "unibz",
@@ -20,41 +20,41 @@
 	"main": "./out/extension.js",
 	"contributes": {
 		"configuration": {
-			"title": "IDE Visualizations",
+			"title": "LM-Powered",
 			"type": "object",
 			"properties": {
-				"visualization.general.colorranges": {
+				"lmpowered.general.colorranges": {
 					"type": "array",
 					"default": [
 						{
 							"Minimum": 0,
 							"Maximum": 2,
-							"Color": "green"
+							"Color": "#005600"
 						},
 						{
 							"Minimum": 2,
 							"Maximum": 4,
-							"Color": "rgb(126, 128, 0)"
+							"Color": "#57BF04"
 						},
 						{
 							"Minimum": 4,
 							"Maximum": 8,
-							"Color": "orange"
+							"Color": "#F1F000"
 						},
 						{
 							"Minimum": 8,
 							"Maximum": 16,
-							"Color": "rgb(255, 72, 0)"
+							"Color": "#E4602E"
 						},
 						{
 							"Minimum": 16,
 							"Maximum": 25,
-							"Color": "red"
+							"Color": "#A90606"
 						}
 					],
 					"description": "Indicates the upper bound bound of the ranges"
 				},
-				"visualization.exclude.directories": {
+				"lmpowered.exclude.directories": {
 					"type": "array",
 					"default": [
 						"node_modules",
@@ -62,7 +62,7 @@
 					],
 					"description": "Determines the folder names that sould not be considered for search and treemap"
 				},
-				"visualization.exclude.filetype": {
+				"lmpowered.exclude.filetype": {
 					"type": "array",
 					"default": [
 						".png",
@@ -72,37 +72,37 @@
 					],
 					"description": "Determines the file types that sould not be considered for search and treemap"
 				},
-				"visualization.risk.enabled": {
+				"lmpowered.risk.enabled": {
 					"type": "boolean",
 					"default": true,
 					"description": "Risk enabled"
 				},
-				"visualization.autocompletion.enabled": {
+				"lmpowered.autocompletion.enabled": {
 					"type": "boolean",
 					"default": false,
 					"description": "Autocompletion enabled"
 				},
-				"visualization.autocompletion.url": {
+				"lmpowered.autocompletion.url": {
 					"type": "string",
 					"default": "http://localhost:8080/api/autocompletion",
 					"description": "Determines the hostname of the webservice for the language model autocompletion"
 				},
-				"visualization.folding.enabled": {
+				"lmpowered.folding.enabled": {
 					"type": "boolean",
 					"default": false,
 					"description": "Folding enabled"
 				},
-				"visualization.folding.foldonopen": {
+				"lmpowered.folding.foldonopen": {
 					"type": "boolean",
 					"default": false,
 					"description": "Fold low risk level code when opening"
 				},
-				"visualization.folding.maxrisk": {
+				"lmpowered.folding.maxrisk": {
 					"type": "number",
 					"default": 35,
 					"description": "Max risk level for folding"
 				},
-				"visualization.languagemodel.model": {
+				"lmpowered.languagemodel.model": {
 					"type": "string",
 					"default": "langmodel-large-split_10k_2_1024_191007.112241_-_langmodel-large-split_10k_2_1024_191022.141344",
 					"description": "Indicates the name of the languagemodel to use for entropy calculation",
@@ -123,37 +123,37 @@
 						"Random - dev_10k_1_10_190923.132328"
 					]
 				},
-				"visualization.debugmode.enabled": {
+				"lmpowered.debugmode.enabled": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enable debug mode - visualize token entropies"
 				},
-				"visualization.languagemodel.url": {
+				"lmpowered.languagemodel.url": {
 					"type": "string",
 					"default": "http://localhost:8080/api/languagemodel",
 					"description": "Determines the hostname of the webservice for the language model"
 				},
-				"visualization.minimap.enabled": {
+				"lmpowered.minimap.enabled": {
 					"type": "boolean",
 					"default": true,
 					"description": "Minimap highlighting enabled"
 				},
-				"visualization.minimap.minrisk": {
+				"lmpowered.minimap.minrisk": {
 					"type": "number",
 					"default": 16,
 					"description": "Determines the minimal risk level for which a highlighting is shown"
 				},
-				"visualization.search.url": {
+				"lmpowered.search.url": {
 					"type": "string",
 					"default": "http://localhost:8080/api/search",
 					"description": "Determines the hostname of the webservice"
 				},
-				"visualization.search.matchindicator": {
+				"lmpowered.search.matchindicator": {
 					"type": "number",
 					"default": 20,
 					"description": "When the difference in % is bigger than the specified value, the token matches to search query"
 				},
-				"visualization.search.queryinterval": {
+				"lmpowered.search.queryinterval": {
 					"type": "number",
 					"default": 10,
 					"description": "Interval: after each n-th line a search-quer-comment is inserted"
@@ -162,35 +162,35 @@
 		},
 		"commands": [
 			{
-				"command": "ide_visualization.showOverview",
+				"command": "lmpowered.showOverview",
 				"title": "Treemap overview - Show a report of your code quality",
 				"category": "Languagemodel"
 			},
 			{
-				"command": "ide_visualization.showSearch",
+				"command": "lmpowered.showSearch",
 				"title": "Contetual search - Send contextual search queries to the languagemodel",
 				"category": "Languagemodel"
 			},
 			{
-				"command": "ide_visualization.showDebug",
+				"command": "lmpowered.showDebug",
 				"title": "Enable debug mode (visualize token entropies)",
 				"category": "Languagemodel"
 			},
 			{
-				"command": "ide_visualization.clearDebug",
+				"command": "lmpowered.clearDebug",
 				"title": "Disable debug mode (hide token entropies)",
 				"category": "Languagemodel"
 			}
 		],
 		"keybindings": [
 			{
-				"command": "ide_visualization.showOverview",
+				"command": "lmpowered.showOverview",
 				"key": "alt+m",
 				"mac": "cmd+o",
 				"when": "editorTextFocus"
 			},
 			{
-				"command": "ide_visualization.showSearch",
+				"command": "lmpowered.showSearch",
 				"key": "alt+shift+s",
 				"mac": "cmd+o",
 				"when": "editorTextFocus"

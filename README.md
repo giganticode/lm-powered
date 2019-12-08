@@ -17,6 +17,6 @@ Run the build task: press Ctrl + Shift + B
 
 Press F5 to run/debug the extension
 
-Customize the behaviour: File -> Preferences -> Settings -> Extensions -> IDE Visualizations
+Customize the behaviour: File -> Preferences -> Settings -> Extensions -> LM-Powered
 
 **Enjoy!**

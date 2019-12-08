@@ -48,7 +48,7 @@ enum RiskType {
 export function activate(context: vscode.ExtensionContext) {
 	ctx = context;
 
-	let showOverview = vscode.commands.registerCommand('ide_visualization.showOverview', () => {
+	let showOverview = vscode.commands.registerCommand('lmpowered.showOverview', () => {
 		let columnToShowIn: vscode.ViewColumn = (vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : vscode.ViewColumn.One) as vscode.ViewColumn;
 
 		if (overviewPanel) {

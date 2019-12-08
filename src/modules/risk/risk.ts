@@ -48,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}, null, context.subscriptions);
 
-	vscode.commands.registerCommand('ide_visualization.showDebug', () => {
+	vscode.commands.registerCommand('lmpowered.showDebug', () => {
 		let editor = vscode.window.activeTextEditor;
 		if (editor) {
 			highlightProvider.visualize(editor, editor.document.fileName);
@@ -56,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 		debugModeEnabled = true;
 	});
 
-	vscode.commands.registerCommand('ide_visualization.clearDebug', () => {
+	vscode.commands.registerCommand('lmpowered.clearDebug', () => {
 		let editor = vscode.window.activeTextEditor;
 		if (editor) {
 			highlightProvider.clear(editor);

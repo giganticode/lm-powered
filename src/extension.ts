@@ -14,7 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
   currentWorkspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0] : undefined;
   
   vscode.workspace.onDidChangeConfiguration((event) => {
-    if (event.affectsConfiguration('visualization')) {
+    if (event.affectsConfiguration('lmpowered')) {
       Settings.readSettings(context);
     }
   }, null,

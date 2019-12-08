@@ -15,7 +15,7 @@ export class Settings {
   public static supportedFileTypes: string[] = [".java"];
 
   static readSettings(context: vscode.ExtensionContext) {
-    Settings.configuration = vscode.workspace.getConfiguration('visualization');
+    Settings.configuration = vscode.workspace.getConfiguration('lmpowered');
     this.excludeFolderName = Settings.configuration.get<string[]>("exclude.directories", ["node_modules", "out"]);
     this.excludeFileType = Settings.configuration.get<string[]>("exclude.filetype", [".png", ".jpg", ".jpeg", ".svg"]);
 
@@ -41,11 +41,11 @@ export class Settings {
   // General
   static getColorRanges(): ColorRange[] {
     return Settings.configuration.get<ColorRange[]>("general.colorranges", [
-      {"Minimum": 0, "Maximum": 1, "Color": "green"}, 
-      {"Minimum": 1, "Maximum": 2, "Color": "rgb(126, 128, 0)"}, 
-      {"Minimum": 2, "Maximum": 3, "Color": "orange"},
-      {"Minimum": 3, "Maximum": 5, "Color": "rgb(255, 72, 0)"}, 
-      {"Minimum": 5, "Maximum": 25, "Color": "red"}
+      {"Minimum": 0, "Maximum": 1, "Color": "#005600"}, 
+      {"Minimum": 1, "Maximum": 2, "Color": "#57BF04"}, 
+      {"Minimum": 2, "Maximum": 3, "Color": "#F1F000"},
+      {"Minimum": 3, "Maximum": 5, "Color": "#E4602E"}, 
+      {"Minimum": 5, "Maximum": 25, "Color": "#A90606"}
     ]);
   }
 

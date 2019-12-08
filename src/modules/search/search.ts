@@ -34,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
 	ctx = context;
 	CACHE_PATH = path.resolve(ctx.extensionPath, 'images', 'minimap');
 
-	let showOverview = vscode.commands.registerCommand('ide_visualization.showSearch', () => {
+	let showOverview = vscode.commands.registerCommand('lmpowered.showSearch', () => {
 		let columnToShowIn: vscode.ViewColumn = (vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : vscode.ViewColumn.One) as vscode.ViewColumn;
 
 		if (overviewPanel) {
