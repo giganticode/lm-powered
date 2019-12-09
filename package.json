@@ -164,22 +164,22 @@
 			{
 				"command": "lmpowered.showOverview",
 				"title": "Treemap overview - Show a report of your code quality",
-				"category": "Languagemodel"
+				"category": "LM-Powered"
 			},
 			{
 				"command": "lmpowered.showSearch",
 				"title": "Contextual search - Send contextual search queries to the languagemodel",
-				"category": "Languagemodel"
+				"category": "LM-Powered"
 			},
 			{
 				"command": "lmpowered.showDebug",
 				"title": "Enable debug mode (visualize token entropies)",
-				"category": "Languagemodel"
+				"category": "LM-Powered"
 			},
 			{
 				"command": "lmpowered.clearDebug",
 				"title": "Disable debug mode (hide token entropies)",
-				"category": "Languagemodel"
+				"category": "LM-Powered"
 			}
 		],
 		"keybindings": [
