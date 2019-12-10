@@ -163,22 +163,22 @@
 		"commands": [
 			{
 				"command": "lmpowered.showOverview",
-				"title": "Treemap overview - Show a report of your code quality",
+				"title": "Treemap risk visualization",
 				"category": "LM-Powered"
 			},
 			{
 				"command": "lmpowered.showSearch",
-				"title": "Contextual search - Send contextual search queries to the languagemodel",
+				"title": "Search code with natural language",
 				"category": "LM-Powered"
 			},
 			{
 				"command": "lmpowered.showDebug",
-				"title": "Enable debug mode (visualize token entropies)",
+				"title": "Enable token-level risk visualization",
 				"category": "LM-Powered"
 			},
 			{
 				"command": "lmpowered.clearDebug",
-				"title": "Disable debug mode (hide token entropies)",
+				"title": "Enable token-level risk visualization",
 				"category": "LM-Powered"
 			}
 		],
