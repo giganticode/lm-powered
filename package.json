@@ -58,7 +58,8 @@
 					"type": "array",
 					"default": [
 						"node_modules",
-						"out"
+						"out",
+						".git"
 					],
 					"description": "Determines the folder names that sould not be considered for search and treemap"
 				},
@@ -68,7 +69,13 @@
 						".png",
 						".jpg",
 						".jpeg",
-						".svg"
+						".svg",
+						".md",
+						".gitignore",
+						".yml",
+						".xml",
+						".gradle",
+						".pro"
 					],
 					"description": "Determines the file types that sould not be considered for search and treemap"
 				},
