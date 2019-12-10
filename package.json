@@ -29,12 +29,12 @@
 						{
 							"Minimum": 0,
 							"Maximum": 2,
-							"Color": "#005600"
+							"Color": "#0d830d"
 						},
 						{
 							"Minimum": 2,
 							"Maximum": 4,
-							"Color": "#57BF04"
+							"Color": "#bfd004"
 						},
 						{
 							"Minimum": 4,
@@ -44,12 +44,12 @@
 						{
 							"Minimum": 8,
 							"Maximum": 16,
-							"Color": "#E4602E"
+							"Color": "#d26a42"
 						},
 						{
 							"Minimum": 16,
-							"Maximum": 25,
-							"Color": "#A90606"
+							"Maximum": 1000,
+							"Color": "#a10c0c"
 						}
 					],
 					"description": "Indicates the upper bound bound of the ranges"
@@ -58,7 +58,8 @@
 					"type": "array",
 					"default": [
 						"node_modules",
-						"out"
+						"out",
+						".git"
 					],
 					"description": "Determines the folder names that sould not be considered for search and treemap"
 				},
@@ -68,7 +69,13 @@
 						".png",
 						".jpg",
 						".jpeg",
-						".svg"
+						".svg",
+						".md",
+						".gitignore",
+						".yml",
+						".xml",
+						".gradle",
+						".pro"
 					],
 					"description": "Determines the file types that sould not be considered for search and treemap"
 				},
@@ -163,23 +170,23 @@
 		"commands": [
 			{
 				"command": "lmpowered.showOverview",
-				"title": "Treemap overview - Show a report of your code quality",
-				"category": "Languagemodel"
+				"title": "Treemap risk visualization",
+				"category": "LM-Powered"
 			},
 			{
 				"command": "lmpowered.showSearch",
-				"title": "Contextual search - Send contextual search queries to the languagemodel",
-				"category": "Languagemodel"
+				"title": "Search code with natural language",
+				"category": "LM-Powered"
 			},
 			{
 				"command": "lmpowered.showDebug",
-				"title": "Enable debug mode (visualize token entropies)",
-				"category": "Languagemodel"
+				"title": "Enable token-level risk visualization",
+				"category": "LM-Powered"
 			},
 			{
 				"command": "lmpowered.clearDebug",
-				"title": "Disable debug mode (hide token entropies)",
-				"category": "Languagemodel"
+				"title": "Enable token-level risk visualization",
+				"category": "LM-Powered"
 			}
 		],
 		"keybindings": [

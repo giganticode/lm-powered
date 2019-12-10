@@ -4,6 +4,14 @@ const axios = require('axios');
 
 // https://code.visualstudio.com/api/language-extensions/programmatic-language-features
 
+function remove_eol_eof(str: string) {
+	if (str.startsWith('<EOL>') || str.startsWith('<EOF>')) {
+		return str.substr(5);
+	} else {
+		return str;
+	}
+}
+
 export function activate(context: vscode.ExtensionContext) {
 	let contextLineCount = 10;
 
@@ -41,8 +49,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 						let proposals = predictions.map((item: any) => {return {text: item[0], value: item[1]};});
 						proposals.sort((a: any, b: any) => (a.value < b.value));
+						console.log(proposals);
 						
-						resolve(proposals.map((item: any) => {return new vscode.CompletionItem(item.text);}));
+						resolve(proposals.map((item: any, index: number) => {
+							let completion_item = new vscode.CompletionItem(item.text);
+							completion_item.sortText = "" + (1-item.value);
+							completion_item.detail = "" + (item.value * 100).toFixed(2) + "%";
+							completion_item.insertText = remove_eol_eof(item.text);
+							completion_item.preselect = (index === 0);
+							return completion_item;
+						}));
 					}).catch((error: any) => {
 						if (error.response.status === 406) {
 							// language type not supported

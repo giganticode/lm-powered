@@ -57,8 +57,8 @@ export function activate(context: vscode.ExtensionContext) {
 		} else {
 			// Otherwise, create a new panel
 			overviewPanel = vscode.window.createWebviewPanel(
-				'codequality',
-				'Code quality',
+				'risktreemap',
+				'Risk Treemap',
 				columnToShowIn,
 				{
 					enableScripts: true,
