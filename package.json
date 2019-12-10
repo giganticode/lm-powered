@@ -29,12 +29,12 @@
 						{
 							"Minimum": 0,
 							"Maximum": 2,
-							"Color": "#005600"
+							"Color": "#0d830d"
 						},
 						{
 							"Minimum": 2,
 							"Maximum": 4,
-							"Color": "#57BF04"
+							"Color": "#bfd004"
 						},
 						{
 							"Minimum": 4,
@@ -44,12 +44,12 @@
 						{
 							"Minimum": 8,
 							"Maximum": 16,
-							"Color": "#E4602E"
+							"Color": "#d26a42"
 						},
 						{
 							"Minimum": 16,
-							"Maximum": 25,
-							"Color": "#A90606"
+							"Maximum": 1000,
+							"Color": "#a10c0c"
 						}
 					],
 					"description": "Indicates the upper bound bound of the ranges"
