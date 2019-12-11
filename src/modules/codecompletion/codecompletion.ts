@@ -60,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
 							return completion_item;
 						}));
 					}).catch((error: any) => {
-						if (error.response.status === 406) {
+						if (error && error.response && error.response.status && error.response.status === 406) {
 							// language type not supported
 						} else {
 							console.log(error);

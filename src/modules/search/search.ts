@@ -128,32 +128,45 @@ function getCachedWebViewContent() {
 }
 
 function getWebviewContent() {
+	console.log("Open webview search")
+	console.log(extension)
+	console.log(extension.currentWorkspaceFolder)
 	if (!extension.currentWorkspaceFolder) {
+		console.log("No workspace root defined")
 		return "No workspace root defined";
 	}
 
-	const resourcePath = path.resolve(ctx.extensionPath, 'resources');
+	try {
 
-	dataArray = [];
-	initDirectoryMap();
-	initCache();
-
-	for (let key in directoryMap) {
-		let element = directoryMap[key];
-		dataArray.push(element);
+		const resourcePath = path.resolve(ctx.extensionPath, 'resources');
+		console.log("resource path")
+		dataArray = [];
+		initDirectoryMap();
+		console.log("inited directory map")
+		initCache();
+		console.log("inited cache")
+		
+		for (let key in directoryMap) {
+			let element = directoryMap[key];
+			dataArray.push(element);
+		}
+		
+		let htmlPath = ctx.asAbsolutePath('./resources/search.html');
+		let fileContent = fs.readFileSync(htmlPath).toString();
+		let html = fileContent.replace(/script src="([^"]*)"/g, (match, src) => {
+			const realSource = 'vscode-resource:' + path.resolve(resourcePath, src);
+			return `script src="${realSource}"`;
+		}).replace(/link href="(\.\/[^"]*)"/g, (match, src) => {
+			const realSource = 'vscode-resource:' + path.resolve(resourcePath, src);
+			return `link href="${realSource}"`;
+		});
+		
+		return html;
+	} catch(e) {
+		console.log("error....");
+		console.log(e);
+		return "<html>Error, could not load html</html>"
 	}
-
-	let htmlPath = ctx.asAbsolutePath('./src/modules/search/search.html');
-	let fileContent = fs.readFileSync(htmlPath).toString();
-	let html = fileContent.replace(/script src="([^"]*)"/g, (match, src) => {
-		const realSource = 'vscode-resource:' + path.resolve(resourcePath, src);
-		return `script src="${realSource}"`;
-	}).replace(/link href="(\.\/[^"]*)"/g, (match, src) => {
-		const realSource = 'vscode-resource:' + path.resolve(resourcePath, src);
-		return `link href="${realSource}"`;
-	});
-
-	return html;
 }
 
 function initCache() {

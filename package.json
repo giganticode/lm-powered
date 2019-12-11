@@ -6,7 +6,7 @@
 	"publisher": "unibz",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/giganticode/vsc-extension-backend.git"
+		"url": "git://github.com/giganticode/lm-powered.git"
 	},
 	"engines": {
 		"vscode": "^1.32.0"

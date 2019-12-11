@@ -163,7 +163,7 @@ function uploadToServer() {
 				//	console.log(response.data);
 			})
 			.catch((error: any) => {
-				if (error.response.status === 406) {
+				if (error && error.response && error.response.status && error.response.status === 406) {
 					//	console.log("file not supported " + item.path);
 				} else {
 					//	console.log("Error in worker.ts");
