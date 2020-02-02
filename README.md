@@ -3,12 +3,12 @@
 ## Quick start
 
 ### Prerequirements
-install the webservice from https://github.com/giganticode/vsc-extension-backend and start the webservice
+install the webservice from https://github.com/giganticode/lm-powered-backend and start the webservice
 
 ### Clone the extension
 
 ```
-git clone https://github.com/giganticode/vsc-extension
+git clone https://github.com/giganticode/lm-powered
 ```
 
 open the project with Visual Studio Code

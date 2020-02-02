@@ -133,7 +133,6 @@ function getWebviewContent() {
 	}
 
 	const resourcePath = path.resolve(ctx.extensionPath, 'resources');
-
 	dataArray = [];
 	initDirectoryMap();
 	initCache();
@@ -143,7 +142,7 @@ function getWebviewContent() {
 		dataArray.push(element);
 	}
 
-	let htmlPath = ctx.asAbsolutePath('./src/modules/search/search.html');
+	let htmlPath = ctx.asAbsolutePath('./resources/search.html');
 	let fileContent = fs.readFileSync(htmlPath).toString();
 	let html = fileContent.replace(/script src="([^"]*)"/g, (match, src) => {
 		const realSource = 'vscode-resource:' + path.resolve(resourcePath, src);

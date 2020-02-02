@@ -106,7 +106,7 @@ function getWebviewContent() {
 		return "No workspace root defined";
 	}
 
-	let htmlPath = ctx.asAbsolutePath('./src/modules/treemap/treemap.html');
+	let htmlPath = ctx.asAbsolutePath('./resources/treemap.html');
 	const resourcePath = path.resolve(ctx.extensionPath, 'resources');
 	let fileContent = fs.readFileSync(htmlPath).toString();
 
@@ -314,7 +314,7 @@ function getRiskLevelsFromWebService() {
 			item.risk = entropies.lines.map(e => e.line_entropy);
 		})
 		.catch((error: any) => {
-			if (error.response.status === 406) {
+			if (error && error.response && error.response.status && error.response.status === 406) {
 				item.riskLevel = Risk.NotSupported;
 			} else {
 				console.log("error");

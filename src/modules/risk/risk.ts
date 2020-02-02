@@ -110,7 +110,7 @@ function updateVisualizationWithoutSaving(editor: vscode.TextEditor) {
 		}
 
 	}).catch((error: any) => {
-		if (error.response.status === 406) {
+		if (error && error.response && error.response.status && error.response.status === 406) {
 			// file not supported
 		} else {
 			console.log(error);
@@ -166,7 +166,7 @@ function updateVisualization(editor: vscode.TextEditor, openEvent: boolean) {
 			}
 
 		}).catch((error: any) => {
-			if (error.response.status === 406) {
+			if (error && error.response && error.response.status && error.response.status === 406) {
 				// file not supported
 			} else {
 				console.log(error);
