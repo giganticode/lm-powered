@@ -240,8 +240,7 @@ function getSearchResultFromWebServie(item: Item, search: string, regex: boolean
 				let original = originalEntropies.lines[i].line_entropy;
 				let search = searchEntropies.lines[i].line_entropy;
 
-				let diff: number = original / search;
-				diff = ((diff < 1 ? 1 / diff : diff) - 1) * 100;
+				let diff: number = original / search * 100;
 				diff = isNaN(diff) ? 0 : diff;
 
 				if (diff > matchIndicator) {
