@@ -5,3 +5,5 @@ node_modules
 images/minimap
 src/test
 images/gutter
+**/.idea/workspace.xml 
+**/.idea/tasks.xml
