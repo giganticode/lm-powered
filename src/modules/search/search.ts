@@ -300,10 +300,9 @@ function setupMessageListener(overviewPanel: vscode.WebviewPanel, context: Conte
 					break;
 				case "search":
 					let search = message.value;
-					let regex = message.value;
 					for (let key in directoryMap) {
 						let item = directoryMap[key];
-						getSearchResultFromWebServie(item, search, regex);
+						getSearchResultFromWebServie(item, search);
 					}
 					break;
 			}
