@@ -7,6 +7,7 @@ import * as highlightProvider from './highlightProvider';
 import * as minimapProvider from './minimapProvider';
 import * as lineEntropyProvider from './lineEntropyProvider';
 import * as worker from './worker';
+import {save_session_cookie} from '../../util';
 
 const fs = require('fs');
 const axios = require('axios');
@@ -15,6 +16,9 @@ let debugModeEnabled = false;
 let timer : NodeJS.Timeout | undefined = undefined;
 
 export function activate(context: vscode.ExtensionContext) {
+
+	Settings.setAvailableLangModels();
+	Settings.setDefaultTokenWeights();
 
 	vscode.workspace.onDidSaveTextDocument((event) => {
 		let editor = vscode.window.activeTextEditor;
@@ -81,17 +85,18 @@ function updateVisualizationWithoutSaving(editor: vscode.TextEditor) {
 		return;
 	}
 
-	let url = Settings.getLanguagemodelHostname();
+	let url = Settings.getRiskUrl();
 
-	axios.post(url, { 
+	axios.post(url, {
 		content: editor.document.getText(),
 		languageId: editor.document.languageId,
 		noReturn: false,
 		resetContext: false,
 		metrics: Settings.getSelectedMetric(),		
 		tokenType: Settings.getSelectedTokenType(),
-		model: Settings.getSelectedModel()
 	}).then((response: any) => {
+		save_session_cookie(response);
+
 		let fileName = editor.document.fileName;
 		GlobalCache.add(fileName, response.data.entropies);
 
@@ -128,22 +133,22 @@ function updateVisualization(editor: vscode.TextEditor, openEvent: boolean) {
 		return;
 	}
 
-	let url = Settings.getLanguagemodelHostname();
+	let url = Settings.getRiskUrl();
 	let filePath = editor.document.fileName;
 	let timestamp = fs.statSync(filePath).mtimeMs;
 
-	axios.post(url, { 
+	axios.post(url, {
 		content: editor.document.getText(),
 		languageId: editor.document.languageId,
 		filePath: filePath,
 		timestamp: timestamp,
 		noReturn: false,
-		resetContext: false,
 		metrics: Settings.getSelectedMetric(),		
 		tokenType: Settings.getSelectedTokenType(),
-		model: Settings.getSelectedModel(),
 		workspaceFolder: extension.currentWorkspaceFolder
 		}).then((response: any) => {
+			save_session_cookie(response);
+
 			let fileName = editor.document.fileName;
 			GlobalCache.add(fileName, response.data.entropies);
 
