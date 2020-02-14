@@ -4,10 +4,11 @@ import * as fs from "fs";
 import { Settings } from '../../settings';
 import { Context } from 'vm';
 import {Md5} from 'ts-md5/dist/md5';
-import {Token, EntropyLine, EntropyResult} from '../../baseDefinitions';
+import {EntropyLine, EntropyResult} from '../../baseDefinitions';
 const axios = require('axios');
 var dataArray: Item[] = [];
 const extension = require('../../extension');
+import {save_session_cookie} from '../../util';
 
 let overviewPanel: vscode.WebviewPanel | undefined = undefined;
 var ctx: Context;
@@ -213,18 +214,20 @@ function scanItem(item: Item) {
 	}
 }
 
-function getSearchResultFromWebServie(item: Item, search: string, regex: boolean) {
+function getSearchResultFromWebServie(item: Item, search_phrase: string) {
 	let url = Settings.getSearchHostname();
 	let matchIndicator = Settings.getSearchMatchIndicator();
 	let searchInterval = Settings.getSearchQueryInterval();
 
 	item.match = [];
-	axios.post(url, { 
+	axios.post(url, {  
 		content: item.content,
-		search: search,
+		search_phrase: search_phrase,
 		languageId: path.extname(item.path).substr(1),
 		searchInterval: searchInterval,
 	 	}).then((response: any) => {
+			save_session_cookie(response);
+
 			console.log("got search result");
 			console.log(response.data);
 

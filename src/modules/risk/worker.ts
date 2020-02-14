@@ -2,10 +2,10 @@ import * as vscode from 'vscode';
 import { Settings } from '../../settings';
 import * as fs from "fs";
 import * as path from 'path';
-import { Context } from 'vm';
 const axios = require('axios');
 import { Md5 } from 'ts-md5/dist/md5';
 const extension = require('../../extension');
+import {save_session_cookie} from '../../util';
 
 let busyIndicator = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
 
@@ -141,7 +141,7 @@ function uploadToServer() {
 	busyIndicator.text = `Uploading files: ${pendingFiles.length} files remaining`;
 	let item: File = pendingFiles.pop() as File;
 
-	let url = Settings.getLanguagemodelHostname();
+	let url = Settings.getRiskUrl();
 
 	let content = item.content;
 
@@ -150,7 +150,7 @@ function uploadToServer() {
 
 		let timestamp = fs.statSync(item.path).mtimeMs;
 
-		axios.post(url, { 
+		axios.post(url, {
 			content: content,
 			languageId: item.extension.replace(/\./, ''),
 			filePath: item.path,
@@ -159,6 +159,7 @@ function uploadToServer() {
 			workspaceFolder: extension.currentWorkspaceFolder
 		 })
 			.then((response: any) => {
+				save_session_cookie(response);
 				//	console.log("request handled for: " + item.path);
 				//	console.log(response.data);
 			})

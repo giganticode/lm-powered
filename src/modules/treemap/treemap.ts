@@ -3,7 +3,8 @@ import * as path from 'path';
 import * as fs from "fs";
 import { Settings } from '../../settings';
 import { Context } from 'vm';
-import {Token, EntropyLine, EntropyResult} from '../../baseDefinitions';
+import {EntropyResult} from '../../baseDefinitions';
+import { save_session_cookie } from '../../util';
 const axios = require('axios');
 const extension = require('../../extension');
 
@@ -293,11 +294,11 @@ function getRiskLevelsFromWebService() {
 
 	let item = pending.shift() as Item;
 
-	let url = Settings.getLanguagemodelHostname();
+	let url = Settings.getRiskUrl();
 	let timestamp = fs.statSync(item.path).mtimeMs;
 
 	item.risk = [];
-	axios.post(url, { 
+	axios.post(url, {  
 			content: item.content,
 			languageId: path.extname(item.path).replace(/\./, ''),
 			filePath: item.path,
@@ -310,6 +311,7 @@ function getRiskLevelsFromWebService() {
 			workspaceFolder: extension.currentWorkspaceFolder
 	 	})
 		.then((response: any) => {
+			save_session_cookie(response);
 			let entropies: EntropyResult = response.data.entropies;
 			item.risk = entropies.lines.map(e => e.line_entropy);
 		})

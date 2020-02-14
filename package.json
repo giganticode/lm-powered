@@ -109,36 +109,15 @@
 					"default": 35,
 					"description": "Max risk level for folding"
 				},
-				"lmpowered.languagemodel.model": {
-					"type": "string",
-					"default": "langmodel-large-split_10k_2_1024_191007.112241_-_langmodel-large-split_10k_2_1024_191022.141344",
-					"description": "Indicates the name of the languagemodel to use for entropy calculation",
-					"enum": [
-						"langmodel-large-split_10k_2_1024_191007.112241_-_langmodel-large-split_10k_2_1024_191022.141344",
-						"langmodel-large-split_10k_3_1024_191007.112257_-_langmodel-large-split_10k_3_1024_191022.134822",
-						"langmodel-large-split_10k_2_2048_191007.112249_-_langmodel-large-split_10k_2_2048_191022.141335",
-						"langmodel-large-split_10k_1_512_190926.120146",
-						"langmodel-small-split_10k_1_512_190906.154943",
-						"dev_10k_1_10_190923.132328"
-					],
-					"enumDescriptions": [
-						"Default/Best - langmodel-large-split_10k_2_1024_191007.112241_-_langmodel-large-split_10k_2_1024_191022.141344",
-						"langmodel-large-split_10k_3_1024_191007.112257_-_langmodel-large-split_10k_3_1024_191022.134822",
-						"langmodel-large-split_10k_2_2048_191007.112249_-_langmodel-large-split_10k_2_2048_191022.141335",
-						"Medium - langmodel-large-split_10k_1_512_190926.120146",
-						"Tiny - langmodel-small-split_10k_1_512_190906.154943",
-						"Random - dev_10k_1_10_190923.132328"
-					]
-				},
 				"lmpowered.debugmode.enabled": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enable debug mode - visualize token entropies"
 				},
-				"lmpowered.languagemodel.url": {
+				"lmpowered.backend.url": {
 					"type": "string",
-					"default": "http://localhost:8080/api/languagemodel",
-					"description": "Determines the hostname of the webservice for the language model"
+					"default": "http://localhost:8080",
+					"description": "The URL of the backend"
 				},
 				"lmpowered.minimap.enabled": {
 					"type": "boolean",
@@ -149,11 +128,6 @@
 					"type": "number",
 					"default": 16,
 					"description": "Determines the minimal risk level for which a highlighting is shown"
-				},
-				"lmpowered.search.url": {
-					"type": "string",
-					"default": "http://localhost:8080/api/search",
-					"description": "Determines the hostname of the webservice"
 				},
 				"lmpowered.search.matchindicator": {
 					"type": "number",
@@ -185,7 +159,7 @@
 			},
 			{
 				"command": "lmpowered.clearDebug",
-				"title": "Enable token-level risk visualization",
+				"title": "Disable token-level risk visualization",
 				"category": "LM-Powered"
 			}
 		],

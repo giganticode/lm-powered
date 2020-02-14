@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Settings } from '../../settings';
 const axios = require('axios');
+import {save_session_cookie} from '../../util';
 
 // https://code.visualstudio.com/api/language-extensions/programmatic-language-features
 
@@ -15,8 +16,10 @@ function remove_eol_eof(str: string) {
 export function activate(context: vscode.ExtensionContext) {
 	let contextLineCount = 10;
 
+	const LANGUAGE = 'java';
+
 	const languagemodelCompletionProvider = vscode.languages.registerCompletionItemProvider(
-		{ scheme: 'file', language: 'java' },
+		{ scheme: 'file', language: LANGUAGE },
 		{
 			provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
 
@@ -35,14 +38,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 				let url = Settings.getAutoCompletionHostname();
 
-				return new Promise((resolve, reject) => { 
+				return new Promise((resolve, reject) => {
 					axios.post(url, { 
 						content: content,
-						languageId: 'java',
-						resetContext: true,
-						proposalsCount: 20,
-						model: Settings.getSelectedModel(),
+						languageId: LANGUAGE,
+						proposalsCount: 20
 					}).then((response: any) => {
+						save_session_cookie(response);
 						// response is an array of proposals
 						let metadata = response.data.metadata;
 						let predictions = response.data.predictions;

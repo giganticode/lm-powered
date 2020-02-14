@@ -1,11 +1,24 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+const axios = require('axios');
+import {save_session_cookie} from './util';
 
 export interface ColorRange {
   Minimum: number;
   Maximum: number;
   Color: string;
 }
+
+export interface TokenWeight {
+  tokenType: string;
+  weight: number;
+}
+
+interface TokenWeightMap {
+	[key: string]: number;
+}
+
+const HOST = "";
 
 export class Settings {
   // Settings cache
@@ -41,17 +54,29 @@ export class Settings {
   // General
   static getColorRanges(): ColorRange[] {
     return Settings.configuration.get<ColorRange[]>("general.colorranges", [
-      {"Minimum": 0, "Maximum": 1, "Color": "#005600"}, 
-      {"Minimum": 1, "Maximum": 2, "Color": "#57BF04"}, 
-      {"Minimum": 2, "Maximum": 3, "Color": "#F1F000"},
-      {"Minimum": 3, "Maximum": 5, "Color": "#E4602E"}, 
-      {"Minimum": 5, "Maximum": 25, "Color": "#A90606"}
+      // {"Minimum": 0, "Maximum": 1, "Color": "#005600"}, 
+      // {"Minimum": 1, "Maximum": 2, "Color": "#57BF04"}, 
+      // {"Minimum": 2, "Maximum": 3, "Color": "#F1F000"},
+      // {"Minimum": 3, "Maximum": 5, "Color": "#E4602E"}, 
+      // {"Minimum": 5, "Maximum": 25, "Color": "#A90606"}
     ]);
   }
 
-  // Search
+  static getTokenWeigths(): TokenWeightMap {
+    let tokenWeightMap = {} as TokenWeightMap;
+    let tokenWeightsArray = Settings.configuration.get<TokenWeight[]>("general.tokenweights", []);
+    for (let weight of tokenWeightsArray) {
+      tokenWeightMap[weight.tokenType] = weight.weight;
+    }
+    return tokenWeightMap;
+  }
+
+  static getBackendUrl(): string {
+    return "http://localhost:8080";
+  }
+
   static getSearchHostname(): string {
-    return Settings.configuration.get<string>("search.url", "http://localhost:8080/api/search");
+    return Settings.configuration.get<string>("search.url", this.getBackendUrl() + "/api/search");
   }
 
   static getSearchMatchIndicator(): number {
@@ -62,9 +87,8 @@ export class Settings {
     return Settings.configuration.get<number>("search.queryinterval", 10);
   }
 
-  // Languagemodel (Risk + Treemap)
-  static getLanguagemodelHostname(): string {
-    return Settings.configuration.get<string>("languagemodel.url", "http://localhost:8080/api/languagemodel");
+  static getRiskUrl(): string {
+    return Settings.configuration.get<string>("languagemodel.url", this.getBackendUrl() + "/api/risk");
   }
 
   // Risk
@@ -100,11 +124,11 @@ export class Settings {
   }
 
   static getAutoCompletionHostname(): string {
-    return Settings.configuration.get<string>("autocompletion.url", "http://localhost:8080/api/autocompletion");
+    return Settings.configuration.get<string>("autocompletion.url", this.getBackendUrl() + "/api/autocompletion");
   }
 
   static getSelectedModel(): string {
-    return Settings.configuration.get<string>("languagemodel.model", "langmodel-small-split_10k_1_512_190906.154943");
+    return Settings.configuration.get<string>("languagemodel.model", "");
   }
 
   // constants
@@ -116,9 +140,58 @@ export class Settings {
     return 'all';
   }
 
+  static getSession(): string {
+    return Settings.configuration.get<string>('general.session', '');
+  }
+
   // update
+
+  static setSession(session: string) {
+    Settings.configuration.update('general.session', session);
+  }
+
   static setColorRangesEntropy(colorRangesEntropyObj: any) {
     Settings.configuration.update('general.colorranges', colorRangesEntropyObj);
   }
 
+  static setDefaultTokenWeights() {
+    const token_types_url = this.getBackendUrl() + "/api/token-types";
+
+    axios.get(token_types_url).then((response: any) => {
+      save_session_cookie(response);
+
+      let tokenTypes = response.data;
+      let tokenWeights = tokenTypes.map((item: string) => {return {tokenType: item, weight: 1.0};});
+      
+      Settings.configuration.update('general.tokenweights', tokenWeights, vscode.ConfigurationTarget.Global);
+    }).catch((error: any) => {
+      console.log(error);
+    });
+  }
+
+  static setAvailableLangModels() {
+    const models_url = this.getBackendUrl() + "/api/models";
+
+    axios.get(models_url).then((response: any) => {
+      save_session_cookie(response);
+      let modelDescriptions = response.data.models;
+      let modelIds = modelDescriptions.map((item: any) => {return item.id;});
+
+      console.log(`Loaded a list of available models from the back-end : ${modelIds}`);
+      
+      let modelsObject = {
+        "type": "string",
+        "default": "langmodel-small-split-reversed_10k_1_512_200117.095729",
+        "description": "Indicates the name of the languagemodel to use for entropy calculation",
+        "enum": modelIds,
+        "enumDescriptions": modelIds
+      };
+
+      console.log(modelsObject);
+
+      Settings.configuration.update('languagemodel.model', modelsObject, vscode.ConfigurationTarget.Global);
+    }).catch((error: any) => {
+      console.log(error);
+    });
+  }
 }
