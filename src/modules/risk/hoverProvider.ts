@@ -35,7 +35,7 @@ export function register() {
                             remainingText = remainingText.substring(endIndex);
     
                             if (targetColumn >= globalIndex + startIndex && targetColumn < globalIndex + endIndex) {
-                                return new vscode.Hover(`Line entropy: ${lineEntropyInfo.line_entropy.toFixed(3)} - Token '${text}' -> ${entropy.toFixed(3)}`);
+                                return new vscode.Hover(`Line entropy: ${lineEntropyInfo.line_entropy.toFixed(3)} - Token '${text}' -> ${entropy.toFixed(3)} ||| tokens: ${lineEntropyInfo.tokens.map((token: Token) => token.text)}`);
                             }
     
                             globalIndex += endIndex;

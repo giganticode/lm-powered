@@ -1,6 +1,7 @@
 export interface Token {
 	text: string;
 	entropy: number;
+	type: string;
 }
 
 export interface EntropyLine {

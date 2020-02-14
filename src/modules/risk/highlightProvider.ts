@@ -58,7 +58,8 @@ export function visualize(editor: vscode.TextEditor, fileName: string) {
 				if (remainingText.substring(startIndex, endIndex) === text) {
 					remainingText = remainingText.substring(endIndex);
 					
-					let color = getColorForEntropy(token.entropy);
+					let token_weight = getWeightForTokenType(token.type);
+					let color = getColorForEntropy(token.entropy * token_weight);
 					const decorator = createDecoratorInstance(color);
 					const decoration = {
 						range: new vscode.Range(new vscode.Position(i, globalIndex + startIndex), new vscode.Position(i, globalIndex + endIndex))
@@ -130,4 +131,15 @@ function getColorForEntropy(riskLevel: number) {
 		}
 	}
 	return ranges[ranges.length - 1].Color;
+}
+
+function getWeightForTokenType(tokenType: string): number {
+	let tokenWeights = Settings.getTokenWeigths();
+	let weight_from_map = tokenWeights[tokenType];
+	if (weight_from_map === undefined) {
+		console.log("Weight for this token type is not defined: " + tokenType);
+		return 1.0;
+	} else {
+		return weight_from_map;
+	}
 }
