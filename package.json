@@ -198,7 +198,7 @@
 		"dom-parser": "^0.1.6",
 		"fs": "0.0.1-security",
 		"jquery": "^3.4.1",
-		"jsdom": "^15.1.1",
+		"jsdom": "^16.5.0",
 		"moment": "^2.24.0",
 		"moment-timezone": "^0.5.26",
 		"nouislider": "^13.1.5",
